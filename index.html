@@ -2,73 +2,164 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Reporte Eléctrico Diario – GAA / GLH</title>
+<title>Dashboard Reporte Eléctrico Diario – GAA/GLH (Doble gráfico)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 :root{
- --bg:#0f1720;
- --card:#111e2b;
- --line:rgba(255,255,255,.12);
- --text:#e8eefc;
- --muted:#b9c3de;
- --ok:#007A33;
- --warn:#FFD100;
- --bad:#C8102E;
- --accent:#007A33;
- --series1:#FFD100;
- --series2:#4aa3ff;
+  --bg:#0f1720;
+  --card:#111e2b;
+  --line:rgba(255,255,255,.12);
+  --text:#e8eefc;
+  --muted:#b9c3de;
+  --ok:#007A33;        /* Verde Ecopetrol */
+  --warn:#FFD100;      /* Amarillo */
+  --bad:#C8102E;       /* Rojo */
+  --accent:#007A33;    /* Botones */
+  --series1:#FFD100;   /* Amarillo línea */
+  --series2:#4aa3ff;   /* Azul línea */
 }
 body{margin:0;font-family:system-ui;background:linear-gradient(140deg,var(--bg),#050813);color:var(--text)}
-header{padding:18px;border-bottom:1px solid var(--line);background:rgba(17,30,43,.95);position:sticky;top:0;z-index:10}
+header{padding:18px;border-bottom:1px solid var(--line);background:rgba(17,30,43,.9);position:sticky;top:0;z-index:10}
 main{padding:18px;max-width:1350px;margin:auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .k{border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.03)}
 .k .t{font-size:12px;color:var(--muted)}
 .k .v{font-size:20px;font-weight:800}
-.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
-.small{font-size:12px;color:var(--muted)}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+ul{margin:0;padding-left:18px}
+textarea{width:100%;min-height:140px;background:#0e1730;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:ui-monospace;white-space:pre}
 button{background:var(--accent);border:none;color:white;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
 button.secondary{background:transparent;border:1px solid var(--line)}
-canvas{width:100%;height:320px;border:1px solid var(--line);border-radius:12px}
-ul{margin:0;padding-left:18px}
+.small{font-size:12px;color:var(--muted)}
+.error{color:#ff6b6b;font-weight:800}
+.canvasWrap{position:relative;width:100%;height:320px}
+canvas{width:100%;height:320px;display:block;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.legend .item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+.hr{height:1px;background:var(--line);margin:10px 0}
+select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0e1730;color:var(--text)}
 </style>
 </head>
-
 <body>
 <header>
   <h2 style="margin:0">Dashboard Reporte Eléctrico Diario – GAA / GLH</h2>
-  <div id="fecha" class="small">—</div>
+  <div id="fecha" class="small">Sin actualizar</div>
   <div id="ultima" class="small"></div>
-</header>
 
+  <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <div style="min-width:240px;flex:1">
+      <div class="small">📅 Seleccionar fecha (HOY)</div>
+      <select id="fechaSelect" onchange="renderFromHist(this.value)"></select>
+    </div>
+    <div>
+    </div>
+  </div>
+</header>
 <main>
 
 <div class="card">
-  <h3>📅 Selección de fecha</h3>
-  <select id="fechaSelect"></select>
+  <h3 style="margin:0">Carga de JSON (AYER / HOY)
+    <button onclick="toggleJson()" style="float:right">Mostrar / Ocultar</button>
+  </h3>
+  <div id="jsonPanel" style="margin-top:10px;display:none">
+    <div class="small">Pega SOLO el JSON (desde <b>{</b> hasta <b>}</b>). Si copias del chat con ```json ... ```, el sistema lo limpia automáticamente.</div>
+    <div class="hr"></div>
+    <b>JSON AYER</b>
+    <textarea id="jsonAyer" placeholder="Pega aquí el JSON AYER..."></textarea>
+    <b>JSON HOY</b>
+    <textarea id="jsonHoy" placeholder="Pega aquí el JSON HOY..."></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <button onclick="procesar()">Actualizar Dashboard</button>
+      <button class="secondary" onclick="borrarHistorico()">Borrar histórico</button>
+      <button class="secondary" onclick="borrarAyer()">Borrar AYER guardado</button>
+      <button class="secondary" onclick="cargarEjemplo()">Cargar ejemplo</button>
+    </div>
+    <div id="estado" class="small" style="margin-top:10px"></div>
+    <div class="small" id="debug" style="margin-top:8px"></div>
+  </div>
 </div>
 
 <div class="card">
-  <h3>🔥 Consumo de Gas – Total y por Unidad</h3>
-  <div class="grid" id="gasComparativo"></div>
+  <h3 style="margin:0">📈 Histórico semanal (últimos 7 reportes)</h3>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px">
+    <div style="flex:1;min-width:260px">
+      <div class="small">Modo gráfico</div>
+      <select id="chartMode" onchange="renderGrafico()">
+        <option value="single">Serie única (seleccionable)</option>
+        <option value="dual">Doble: Generación total vs Importación GEB (MW)</option>
+      </select>
+    </div>
+    <div style="flex:1;min-width:260px" id="singleMetricBox">
+      <div class="small">Indicador</div>
+      <select id="metric" onchange="renderGrafico()"></select>
+    </div>
+    <div style="flex:1;min-width:260px" id="singleSourceBox">
+      <div class="small">Fuente</div>
+      <select id="source" onchange="renderGrafico()">
+        <option value="auto">Auto (kpis / producción_campos)</option>
+        <option value="kpis">KPIs</option>
+        <option value="produccion_campos">Producción por campos</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="canvasWrap" style="margin-top:12px">
+    <canvas id="chart" width="1100" height="320"></canvas>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="small" id="histInfo" style="margin-top:8px"></div>
 </div>
 
 <div class="card">
-  <h3>⚡ Generación – Total HOY vs AYER</h3>
-  <div class="grid" id="genTotal"></div>
+  <h3 style="margin:0">⚡ Generación – Total HOY vs AYER (MW)</h3>
+  <div class="grid" id="genTotal" style="margin-top:10px"></div>
 </div>
 
 <div class="card">
-  <h3>🚨 Alertas Operativas</h3>
-  <ul id="alertas"></ul>
+  <h3 style="margin:0">⚡ Comparativo Generación por Unidad (HOY vs AYER)</h3>
+  <div class="grid" id="genComparativo" style="margin-top:10px"></div>
+  <div class="small">Requiere <b>kpis_generacion</b> en HOY y/o AYER.</div>
 </div>
 
 <div class="card">
-  <h3>📈 Histórico semanal</h3>
-  <canvas id="chart" width="1100" height="320"></canvas>
-  <div id="histInfo" class="small"></div>
+  <h3 style="margin:0">🔥 Consumo de Gas – Comparativo Hoy vs Ayer</h3>
+  <div class="grid" id="gasComparativo" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <h3 style="margin:0">📊 KPIs – Comparativo Hoy vs Ayer</h3>
+  <div class="grid" id="kpis" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <h3 style="margin:0">🛢️ Producción – Comparativo por Campo (HOY vs AYER)</h3>
+  <div class="grid" id="prodComparativo" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <h3 style="margin:0">📌 Consignas Operativas</h3>
+  <ul id="consignas" style="margin-top:10px"></ul>
+</div>
+
+<div class="card">
+  <h3 style="margin:0">🧠 Resumen Ejecutivo Automático</h3>
+  <ul id="resumen" style="margin-top:10px"></ul>
+</div>
+
+<div class="card">
+  <h3 style="margin:0">🚨 Alertas por Umbral</h3>
+  <ul id="alertas" style="margin-top:10px"></ul>
+</div>
+
+<div class="card">
+  <h3 style="margin:0">📤 Exportar Resumen + Consignas a Correo</h3>
+  <div style="margin-top:10px">
+    <button onclick="exportarCorreo()">Abrir correo</button>
+    <button class="secondary" onclick="copiarCorreo()" style="margin-left:8px">Copiar texto</button>
+  </div>
+  <div id="correoEstado" class="small" style="margin-top:10px"></div>
 </div>
 
 </main>
@@ -76,134 +167,35 @@ ul{margin:0;padding-left:18px}
 <script>
 let HIST = {};
 
-function fmt(n){
-  const x=Number(n);
-  return Number.isFinite(x)?x.toLocaleString('es-CO'):'—';
-}
-
-function cargarManifest(){
-  return fetch('manifest.json',{cache:'no-store'}).then(r=>r.json());
-}
-
-function cargarJSON(f){
-  return fetch('data/'+f+'.json',{cache:'no-store'}).then(r=>r.json());
-}
-
-function renderDesdeFecha(fecha){
-  const fechas = Object.keys(HIST).sort();
-  const i = fechas.indexOf(fecha);
-  const hoy = HIST[fecha];
-  const ayer = HIST[fechas[Math.max(0,i-1)]];
-
-  document.getElementById('fecha').innerText =
-    `HOY: ${hoy.fecha} | AYER: ${ayer.fecha}`;
-  document.getElementById('ultima').innerText =
-    'Actualizado: ' + new Date().toLocaleString('es-CO');
-
-  renderGas(hoy,ayer);
-  renderGen(hoy,ayer);
-  renderAlertas(hoy);
-  renderGrafico(fechas);
-}
-
-function renderGas(hoy,ayer){
-  const box=document.getElementById('gasComparativo');
-  box.innerHTML='';
-
-  box.innerHTML += `
-    <div class="k">
-      <div class="t">Gas total HOY</div>
-      <div class="v">${fmt(hoy.kpis.gas_total_KPC)} KPC</div>
-      <div class="small">Intensidad: ${hoy.kpis.intensidad_gas_KPC_por_MWh_neta.toFixed(2)}</div>
-    </div>
-  `;
-
-  Object.entries(hoy.consumo_gas_unidades||{}).forEach(([u,h])=>{
-    const a = ayer.consumo_gas_unidades?.[u]||{};
-    const hI = h.KPC/h.MWh_neta;
-    const aI = a.KPC&&a.MWh_neta ? a.KPC/a.MWh_neta : null;
-    const dI = aI ? ((hI-aI)/aI)*100 : null;
-    let cls='ok';
-    if(hI>=10||dI>=25) cls='bad';
-    else if(hI>=9||dI>=10) cls='warn';
-
-    box.innerHTML += `
-      <div class="k">
-        <div class="t">⛽ ${u}</div>
-        <div class="v ${cls}">
-          ${fmt(h.KPC)} KPC | ${fmt(h.MWh_neta)} MWh
-        </div>
-        <div class="small ${cls}">
-          Intensidad: ${hI.toFixed(2)} KPC/MWh ${dI?`| Δ ${dI.toFixed(1)}%`:''}
-        </div>
-      </div>
-    `;
-  });
-}
-
-function renderGen(hoy,ayer){
-  const box=document.getElementById('genTotal');
-  box.innerHTML='';
-  const d = hoy.kpis.generacion_total_MW - ayer.kpis.generacion_total_MW;
-  box.innerHTML = `
-    <div class="k">
-      <div class="t">Generación total</div>
-      <div class="v ${d<0?'bad':'ok'}">${fmt(hoy.kpis.generacion_total_MW)} MW</div>
-      <div class="small">Δ ${fmt(d)} MW</div>
-    </div>
-  `;
-}
-
-function renderAlertas(hoy){
-  const ul=document.getElementById('alertas');
-  ul.innerHTML='';
-  if(hoy.kpis.intensidad_gas_KPC_por_MWh_neta>=9)
-    ul.innerHTML+='<li class="warn">⚠️ Intensidad de gas elevada</li>';
-  if(hoy.kpis.dependencia_STN_pct>=55)
-    ul.innerHTML+='<li class="bad">🔴 Alta dependencia STN</li>';
-  if(!ul.innerHTML)
-    ul.innerHTML='<li class="ok">Sin alertas críticas</li>';
-}
-
-function renderGrafico(fechas){
-  const c=document.getElementById('chart');
-  const ctx=c.getContext('2d');
-  ctx.clearRect(0,0,c.width,c.height);
-  const vals=fechas.map(f=>HIST[f].kpis.generacion_total_MW);
-  const min=Math.min(...vals), max=Math.max(...vals);
-  ctx.strokeStyle='#FFD100';
-  ctx.beginPath();
-  vals.forEach((v,i)=>{
-    const x=40+i*(c.width-80)/(vals.length-1);
-    const y=c.height-40-(v-min)*(c.height-80)/(max-min||1);
-    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-  document.getElementById('histInfo').innerText =
-    `Histórico: ${fechas[0]} → ${fechas[fechas.length-1]}`;
-}
-
-(function init(){
-  cargarManifest().then(m=>{
-    const sel=document.getElementById('fechaSelect');
-    let chain=Promise.resolve();
-    m.fechas.forEach(f=>{
-      chain=chain.then(()=>cargarJSON(f).then(j=>HIST[f]=j));
-    });
-    chain.then(()=>{
-      sel.innerHTML='';
-      m.fechas.forEach(f=>{
-        const o=document.createElement('option');
-        o.value=f; o.textContent=f;
-        sel.appendChild(o);
+function cargarTodo(){
+  fetch('manifest.json',{cache:'no-store'})
+    .then(r=>r.json())
+    .then(m=>{
+      const fechas = m.fechas || [];
+      let chain = Promise.resolve();
+      fechas.forEach(f=>{
+        chain = chain.then(()=>fetch('data/'+f+'.json',{cache:'no-store'}).then(r=>r.json()).then(j=>HIST[f]=j));
       });
-      sel.value=m.fechas[m.fechas.length-1];
-      sel.onchange=()=>renderDesdeFecha(sel.value);
+      return chain.then(()=>fechas);
+    })
+    .then(fechas=>{
+      const sel=document.getElementById('fechaSelect');
+      sel.innerHTML='';
+      fechas.forEach(f=>{
+        const o=document.createElement('option'); o.value=f; o.textContent=f; sel.appendChild(o);
+      });
+      sel.value = fechas[fechas.length-1];
+      sel.onchange = ()=>renderDesdeFecha(sel.value);
       renderDesdeFecha(sel.value);
+    })
+    .catch(e=>{
+      console.error(e);
+      document.getElementById('fecha').innerText='Error cargando datos';
     });
-  });
-})();
-</script>
+}
 
+window.addEventListener('DOMContentLoaded', cargarTodo);
+</script>
 </body>
 </html>
+
