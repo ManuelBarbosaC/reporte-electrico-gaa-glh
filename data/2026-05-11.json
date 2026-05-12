@@ -1,0 +1,66 @@
+{
+  "fecha": "2026-05-11",
+  "titulo": "Reporte Electrico Diario - GAA/GLH",
+  "corte": "Reporte 2026-05-11 (fecha de reporte)",
+  "gerencias": ["GAA", "GLH"],
+  "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+  "consignas": [
+    "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
+    "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina."
+  ],
+  "produccion_campos": {
+    "Castilla": 96316,
+    "Apiay": 10539,
+    "Chichimene": 58804,
+    "CPO9": 26303
+  },
+  "kpis": {
+    "demanda_promedio_MW": 309.98,
+    "importacion_GEB_230kV_MW": 160.92,
+    "importacion_Cenit_MW": 42.0,
+    "generacion_total_MW": 106.0,
+    "dependencia_STN_pct": 51.91,
+
+    "produccion_total_bbl": 191963,
+    "diferida_total_bbl": 235,
+
+    "gas_total_KPC": 20995.0,
+    "mwh_neta_total": 2343.1,
+    "intensidad_gas_KPC_por_MWh_neta": 8.96,
+    "termica_MW_promedio": 97.64,
+    "gas_KPC_por_MW_termico": 215.0,
+
+    "delta_gas_vs_ayer_pct": -2.09,
+    "delta_intensidad_gas_vs_ayer_pct": 0.27,
+    "alerta_variacion_gas": "OK"
+  },
+  "consumo_gas_unidades": {
+    "Termocoa": {
+      "KPC": 7429.0,
+      "MWh_neta": 899.0
+    },
+    "TES-1": {
+      "KPC": 8026.0,
+      "MWh_neta": 888.4
+    },
+    "TES-3": {
+      "KPC": 5540.0,
+      "MWh_neta": 555.8
+    }
+  },
+  "kpis_generacion": {
+    "TES-1": { "estado": "Operando", "potencia_MW": 37.02 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.16 },
+    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 37.46 }
+  },
+  "resumen": [
+    "Demanda promedio 309,98 MW con dependencia STN ~51,9%.",
+    "Consumo de gas 20.995 KPC (-2,1% vs 10/05).",
+    "La intensidad de gas se mantuvo estable (8,96 KPC/MWh).",
+    "TES-3 continúa como la unidad de mayor intensidad específica.",
+    "Producción total 191.963 bbl con diferida de 235 bbl."
+  ],
+  "raw": ""
+}

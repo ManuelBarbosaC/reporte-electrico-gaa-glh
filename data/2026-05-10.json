@@ -1,0 +1,66 @@
+{
+  "fecha": "2026-05-10",
+  "titulo": "Reporte Electrico Diario - GAA/GLH",
+  "corte": "Reporte 2026-05-10 (fecha de reporte)",
+  "gerencias": ["GAA", "GLH"],
+  "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+  "consignas": [
+    "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
+    "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina."
+  ],
+  "produccion_campos": {
+    "Castilla": 94799,
+    "Apiay": 10875,
+    "Chichimene": 57013,
+    "CPO9": 26828
+  },
+  "kpis": {
+    "demanda_promedio_MW": 313.8,
+    "importacion_GEB_230kV_MW": 152.46,
+    "importacion_Cenit_MW": 49.21,
+    "generacion_total_MW": 110.99,
+    "dependencia_STN_pct": 48.6,
+
+    "produccion_total_bbl": 189514,
+    "diferida_total_bbl": 468,
+
+    "gas_total_KPC": 21443.2,
+    "mwh_neta_total": 2399.6,
+    "intensidad_gas_KPC_por_MWh_neta": 8.94,
+    "termica_MW_promedio": 99.98,
+    "gas_KPC_por_MW_termico": 214.5,
+
+    "delta_gas_vs_ayer_pct": null,
+    "delta_intensidad_gas_vs_ayer_pct": null,
+    "alerta_variacion_gas": "SIN_BASE_COMPARACION"
+  },
+  "consumo_gas_unidades": {
+    "Termocoa": {
+      "KPC": 7810.2,
+      "MWh_neta": 943.8
+    },
+    "TES-1": {
+      "KPC": 8083.0,
+      "MWh_neta": 898.9
+    },
+    "TES-3": {
+      "KPC": 5550.0,
+      "MWh_neta": 557.0
+    }
+  },
+  "kpis_generacion": {
+    "TES-1": { "estado": "Operando", "potencia_MW": 37.45 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.21 },
+    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 39.32 }
+  },
+  "resumen": [
+    "Demanda promedio 313,8 MW con dependencia STN ~48,6%.",
+    "Consumo de gas 21.443 KPC con intensidad promedio 8,94 KPC/MWh neta.",
+    "TES-3 presentó la mayor intensidad específica de gas.",
+    "Producción total 189.514 bbl con diferida total de 468 bbl."
+  ],
+  "raw": ""
+}
+
