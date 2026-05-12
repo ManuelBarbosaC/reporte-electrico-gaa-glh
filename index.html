@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Reporte Eléctrico Diario – GAA / GLH</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+ --bg:#0f1720;
+ --card:#111e2b;
+ --line:rgba(255,255,255,.12);
+ --text:#e8eefc;
+ --muted:#b9c3de;
+ --ok:#007A33;
+ --warn:#FFD100;
+ --bad:#C8102E;
+ --accent:#007A33;
+ --series1:#FFD100;
+ --series2:#4aa3ff;
+}
+body{margin:0;font-family:system-ui;background:linear-gradient(140deg,var(--bg),#050813);color:var(--text)}
+header{padding:18px;border-bottom:1px solid var(--line);background:rgba(17,30,43,.95);position:sticky;top:0;z-index:10}
+main{padding:18px;max-width:1350px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.k{border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.03)}
+.k .t{font-size:12px;color:var(--muted)}
+.k .v{font-size:20px;font-weight:800}
+.ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.small{font-size:12px;color:var(--muted)}
+button{background:var(--accent);border:none;color:white;padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+button.secondary{background:transparent;border:1px solid var(--line)}
+canvas{width:100%;height:320px;border:1px solid var(--line);border-radius:12px}
+ul{margin:0;padding-left:18px}
+</style>
+</head>
+
+<body>
+<header>
+  <h2 style="margin:0">Dashboard Reporte Eléctrico Diario – GAA / GLH</h2>
+  <div id="fecha" class="small">—</div>
+  <div id="ultima" class="small"></div>
+</header>
+
+<main>
+
+<div class="card">
+  <h3>📅 Selección de fecha</h3>
+  <select id="fechaSelect"></select>
+</div>
+
+<div class="card">
+  <h3>🔥 Consumo de Gas – Total y por Unidad</h3>
+  <div class="grid" id="gasComparativo"></div>
+</div>
+
+<div class="card">
+  <h3>⚡ Generación – Total HOY vs AYER</h3>
+  <div class="grid" id="genTotal"></div>
+</div>
+
+<div class="card">
+  <h3>🚨 Alertas Operativas</h3>
+  <ul id="alertas"></ul>
+</div>
+
+<div class="card">
+  <h3>📈 Histórico semanal</h3>
+  <canvas id="chart" width="1100" height="320"></canvas>
+  <div id="histInfo" class="small"></div>
+</div>
+
+</main>
+
+<script>
+let HIST = {};
+
+function fmt(n){
+  const x=Number(n);
+  return Number.isFinite(x)?x.toLocaleString('es-CO'):'—';
+}
+
+function cargarManifest(){
+  return fetch('manifest.json',{cache:'no-store'}).then(r=>r.json());
+}
+
+function cargarJSON(f){
+  return fetch('data/'+f+'.json',{cache:'no-store'}).then(r=>r.json());
+}
+
+function renderDesdeFecha(fecha){
+  const fechas = Object.keys(HIST).sort();
+  const i = fechas.indexOf(fecha);
+  const hoy = HIST[fecha];
+  const ayer = HIST[fechas[Math.max(0,i-1)]];
+
+  document.getElementById('fecha').innerText =
+    `HOY: ${hoy.fecha} | AYER: ${ayer.fecha}`;
+  document.getElementById('ultima').innerText =
+    'Actualizado: ' + new Date().toLocaleString('es-CO');
+
+  renderGas(hoy,ayer);
+  renderGen(hoy,ayer);
+  renderAlertas(hoy);
+  renderGrafico(fechas);
+}
+
+function renderGas(hoy,ayer){
+  const box=document.getElementById('gasComparativo');
+  box.innerHTML='';
+
+  box.innerHTML += `
+    <div class="k">
+      <div class="t">Gas total HOY</div>
+      <div class="v">${fmt(hoy.kpis.gas_total_KPC)} KPC</div>
+      <div class="small">Intensidad: ${hoy.kpis.intensidad_gas_KPC_por_MWh_neta.toFixed(2)}</div>
+    </div>
+  `;
+
+  Object.entries(hoy.consumo_gas_unidades||{}).forEach(([u,h])=>{
+    const a = ayer.consumo_gas_unidades?.[u]||{};
+    const hI = h.KPC/h.MWh_neta;
+    const aI = a.KPC&&a.MWh_neta ? a.KPC/a.MWh_neta : null;
+    const dI = aI ? ((hI-aI)/aI)*100 : null;
+    let cls='ok';
+    if(hI>=10||dI>=25) cls='bad';
+    else if(hI>=9||dI>=10) cls='warn';
+
+    box.innerHTML += `
+      <div class="k">
+        <div class="t">⛽ ${u}</div>
+        <div class="v ${cls}">
+          ${fmt(h.KPC)} KPC | ${fmt(h.MWh_neta)} MWh
+        </div>
+        <div class="small ${cls}">
+          Intensidad: ${hI.toFixed(2)} KPC/MWh ${dI?`| Δ ${dI.toFixed(1)}%`:''}
+        </div>
+      </div>
+    `;
+  });
+}
+
+function renderGen(hoy,ayer){
+  const box=document.getElementById('genTotal');
+  box.innerHTML='';
+  const d = hoy.kpis.generacion_total_MW - ayer.kpis.generacion_total_MW;
+  box.innerHTML = `
+    <div class="k">
+      <div class="t">Generación total</div>
+      <div class="v ${d<0?'bad':'ok'}">${fmt(hoy.kpis.generacion_total_MW)} MW</div>
+      <div class="small">Δ ${fmt(d)} MW</div>
+    </div>
+  `;
+}
+
+function renderAlertas(hoy){
+  const ul=document.getElementById('alertas');
+  ul.innerHTML='';
+  if(hoy.kpis.intensidad_gas_KPC_por_MWh_neta>=9)
+    ul.innerHTML+='<li class="warn">⚠️ Intensidad de gas elevada</li>';
+  if(hoy.kpis.dependencia_STN_pct>=55)
+    ul.innerHTML+='<li class="bad">🔴 Alta dependencia STN</li>';
+  if(!ul.innerHTML)
+    ul.innerHTML='<li class="ok">Sin alertas críticas</li>';
+}
+
+function renderGrafico(fechas){
+  const c=document.getElementById('chart');
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const vals=fechas.map(f=>HIST[f].kpis.generacion_total_MW);
+  const min=Math.min(...vals), max=Math.max(...vals);
+  ctx.strokeStyle='#FFD100';
+  ctx.beginPath();
+  vals.forEach((v,i)=>{
+    const x=40+i*(c.width-80)/(vals.length-1);
+    const y=c.height-40-(v-min)*(c.height-80)/(max-min||1);
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  document.getElementById('histInfo').innerText =
+    `Histórico: ${fechas[0]} → ${fechas[fechas.length-1]}`;
+}
+
+(function init(){
+  cargarManifest().then(m=>{
+    const sel=document.getElementById('fechaSelect');
+    let chain=Promise.resolve();
+    m.fechas.forEach(f=>{
+      chain=chain.then(()=>cargarJSON(f).then(j=>HIST[f]=j));
+    });
+    chain.then(()=>{
+      sel.innerHTML='';
+      m.fechas.forEach(f=>{
+        const o=document.createElement('option');
+        o.value=f; o.textContent=f;
+        sel.appendChild(o);
+      });
+      sel.value=m.fechas[m.fechas.length-1];
+      sel.onchange=()=>renderDesdeFecha(sel.value);
+      renderDesdeFecha(sel.value);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
