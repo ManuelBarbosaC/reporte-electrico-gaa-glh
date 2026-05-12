@@ -42,6 +42,7 @@ canvas{width:100%;height:320px;display:block;background:rgba(255,255,255,.02);bo
 select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0e1730;color:var(--text)}
 </style>
 </head>
+
 <body>
 <header>
   <h2 style="margin:0">Dashboard Reporte Eléctrico Diario – GAA / GLH</h2>
@@ -51,20 +52,20 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
   <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <div style="min-width:240px;flex:1">
       <div class="small">📅 Seleccionar fecha (HOY)</div>
-      <select id="fechaSelect" onchange="renderFromHist(this.value)"></select>
+      <select id="fechaSelect"></select>
     </div>
     <div>
-      <button onclick="cargarHistoricoDesdeSharePoint()">🔄 Recargar histórico (SharePoint)</button>
+      <button onclick="cargarHistoricoWeb()">🔄 Recargar histórico</button>
+      <button class="secondary" onclick="toggleJson()" style="margin-left:6px">Mostrar/Ocultar carga manual</button>
     </div>
-    <div class="small" id="spStatus" style="min-width:280px"></div>
+    <div class="small" id="webStatus" style="min-width:280px"></div>
   </div>
 </header>
+
 <main>
 
 <div class="card">
-  <h3 style="margin:0">Carga de JSON (AYER / HOY)
-    <button onclick="toggleJson()" style="float:right">Mostrar / Ocultar</button>
-  </h3>
+  <h3 style="margin:0">Carga de JSON (AYER / HOY)</h3>
   <div id="jsonPanel" style="margin-top:10px;display:none">
     <div class="small">Pega SOLO el JSON (desde <b>{</b> hasta <b>}</b>). Si copias del chat con ```json ... ```, el sistema lo limpia automáticamente.</div>
     <div class="hr"></div>
@@ -73,7 +74,7 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
     <b>JSON HOY</b>
     <textarea id="jsonHoy" placeholder="Pega aquí el JSON HOY..."></textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-      <button onclick="procesar()">Actualizar Dashboard</button>
+      <button onclick="procesar()">Actualizar Dashboard (manual)</button>
       <button class="secondary" onclick="borrarHistorico()">Borrar histórico</button>
       <button class="secondary" onclick="borrarAyer()">Borrar AYER guardado</button>
       <button class="secondary" onclick="cargarEjemplo()">Cargar ejemplo</button>
@@ -165,6 +166,7 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
 </div>
 
 </main>
+
 <script>
 const STORAGE_KEY = 'reporte_electrico_ultimo_hoy_v4';
 const HIST_KEY = 'reporte_electrico_historial_v3';
@@ -172,6 +174,13 @@ const HIST_KEY = 'reporte_electrico_historial_v3';
 function toggleJson(){
   const p=document.getElementById('jsonPanel');
   p.style.display=(p.style.display==='none')?'block':'none';
+}
+
+function setWebStatus(msg, cls){
+  const el=document.getElementById('webStatus');
+  if(!el) return;
+  el.className = 'small ' + (cls||'');
+  el.textContent = msg;
 }
 
 function stripCodeFences(text){
@@ -211,7 +220,8 @@ function borrarHistorico(){
 
 function borrarAyer(){
   localStorage.removeItem(STORAGE_KEY);
-  document.getElementById('estado').innerHTML = '<span class="ok">AYER guardado eliminado. Debes pegar AYER nuevamente.</span>';
+  const est=document.getElementById('estado');
+  if(est) est.innerHTML = '<span class="ok">AYER guardado eliminado. Debes pegar AYER nuevamente.</span>';
 }
 
 function sanitizeKey(s){
@@ -235,7 +245,90 @@ function flattenGenToKpis(rep){
   }
 }
 
+function fetchJsonWeb(url){
+  return fetch(url, {cache:'no-store'}).then(r=>{
+    if(!r.ok) throw new Error('No se pudo cargar: '+url+' (HTTP '+r.status+')');
+    return r.json();
+  });
+}
 
+/* ======== CARGA AUTOMÁTICA (GitHub Pages): manifest.json + data/*.json ======== */
+function cargarHistoricoWeb(){
+  setWebStatus('Cargando histórico...', '');
+  fetchJsonWeb('manifest.json')
+    .then(manifest=>{
+      const fechas=(manifest.fechas||[]).slice().sort();
+      if(fechas.length===0) throw new Error('manifest.json no tiene fechas');
+      const hist={};
+      let chain=Promise.resolve();
+      fechas.forEach(f=>{
+        chain = chain.then(()=>fetchJsonWeb('data/'+f+'.json').then(rep=>{ hist[f]=rep; }));
+      });
+      return chain.then(()=>({hist,fechas}));
+    })
+    .then(({hist,fechas})=>{
+      saveHist(hist);
+      const sel=document.getElementById('fechaSelect');
+      sel.innerHTML='';
+      fechas.forEach(f=>{
+        const opt=document.createElement('option');
+        opt.value=f;
+        opt.textContent=f;
+        sel.appendChild(opt);
+      });
+      sel.value = fechas[fechas.length-1];
+      sel.onchange = ()=>renderFromHist(sel.value);
+      renderFromHist(fechas[fechas.length-1]);
+      setWebStatus('✅ Histórico cargado: '+fechas.length+' fechas.', 'ok');
+    })
+    .catch(err=>{
+      console.error(err);
+      setWebStatus('❌ '+err.message, 'error');
+    });
+}
+
+function renderFromHist(fechaHoy){
+  const hist = loadHist();
+  const fechas = Object.keys(hist).sort();
+  if(fechas.length===0){
+    const est=document.getElementById('estado');
+    if(est) est.innerHTML = '<span class="error">❌ No hay histórico cargado. Usa “Recargar histórico”.</span>';
+    return;
+  }
+
+  if(!hist[fechaHoy]) fechaHoy = fechas[fechas.length-1];
+  const idx = fechas.indexOf(fechaHoy);
+  const fechaAyer = (idx>0) ? fechas[idx-1] : fechas[idx];
+
+  const hoy = hist[fechaHoy];
+  const ayer = hist[fechaAyer];
+
+  const tHoy=document.getElementById('jsonHoy');
+  const tAyer=document.getElementById('jsonAyer');
+  if(tHoy) tHoy.value = JSON.stringify(hoy, null, 2);
+  if(tAyer) tAyer.value = JSON.stringify(ayer, null, 2);
+
+  flattenGenToKpis(hoy);
+  flattenGenToKpis(ayer);
+
+  document.getElementById('fecha').innerText = `Fecha HOY: ${hoy.fecha||'—'}  |  AYER: ${ayer.fecha||'—'}`;
+  document.getElementById('ultima').innerText = 'Última actualización: ' + new Date().toLocaleString('es-CO');
+
+  renderKpis(hoy,ayer);
+  renderProduccion(hoy,ayer);
+  renderConsignas(hoy);
+  renderResumen(hoy);
+  renderAlertas(hoy);
+  renderGenTotal(hoy,ayer);
+  renderComparativoGeneracion(hoy,ayer);
+  renderConsumoGas(hoy,ayer);
+  renderConsumoGasPorUnidad(hoy,ayer);
+
+  refreshMetricOptions();
+  renderGrafico();
+}
+
+/* ===================== GAS (TOTAL + UNIDADES) ===================== */
 function renderConsumoGas(hoy, ayer){
   const box = document.getElementById('gasComparativo');
   box.innerHTML = '';
@@ -248,13 +341,11 @@ function renderConsumoGas(hoy, ayer){
   const mwhA = Number(ayer?.kpis?.mwh_neta_total);
   const intA = Number(ayer?.kpis?.intensidad_gas_KPC_por_MWh_neta);
 
-  // Si HOY no tiene gas, mostrar mensaje
   if(!Number.isFinite(gasH) || !Number.isFinite(mwhH) || !Number.isFinite(intH)){
     box.innerHTML = '<div class="small">— No hay datos de gas en HOY (revisar kpis.gas_total_KPC / mwh_neta_total / intensidad_gas_KPC_por_MWh_neta).</div>';
     return;
   }
 
-  // Tarjeta: Gas total
   const t1 = document.createElement('div');
   t1.className = 'k';
   t1.innerHTML = `
@@ -264,7 +355,6 @@ function renderConsumoGas(hoy, ayer){
   `;
   box.appendChild(t1);
 
-  // Tarjeta: Intensidad
   const clsInt = intH >= 8.5 ? 'bad' : intH >= 7.5 ? 'warn' : 'ok';
   const t2 = document.createElement('div');
   t2.className = 'k';
@@ -274,11 +364,11 @@ function renderConsumoGas(hoy, ayer){
   `;
   box.appendChild(t2);
 
-  // Comparativo HOY vs AYER
   if(Number.isFinite(gasA) && Number.isFinite(mwhA) && Number.isFinite(intA) && gasA > 0 && intA > 0){
     const dGas = ((gasH - gasA) / gasA) * 100;
     const dInt = ((intH - intA) / intA) * 100;
     const clsComp = Math.abs(dInt) >= 25 ? 'bad' : (Math.abs(dInt) >= 10 ? 'warn' : 'ok');
+
     const t3 = document.createElement('div');
     t3.className = 'k';
     t3.innerHTML = `
@@ -298,9 +388,6 @@ function renderConsumoGas(hoy, ayer){
     box.appendChild(t3);
   }
 }
-
-
-
 
 function renderConsumoGasPorUnidad(hoy, ayer){
   const box = document.getElementById('gasComparativo');
@@ -332,7 +419,6 @@ function renderConsumoGasPorUnidad(hoy, ayer){
     const dK = (Number.isFinite(hK) && Number.isFinite(aK) && aK>0) ? ((hK-aK)/aK)*100 : NaN;
     const dI = (Number.isFinite(hI) && Number.isFinite(aI) && aI>0) ? ((hI-aI)/aI)*100 : NaN;
 
-    // Semáforo por eficiencia
     let cls='ok';
     if(Number.isFinite(dI) && dI >= 25) cls='bad';
     else if(Number.isFinite(dI) && dI >= 10) cls='warn';
@@ -351,6 +437,7 @@ function renderConsumoGasPorUnidad(hoy, ayer){
   });
 }
 
+/* ===================== MODO MANUAL (pegar JSON) ===================== */
 function procesar(){
   const estado=document.getElementById('estado');
   const debug=document.getElementById('debug');
@@ -383,14 +470,11 @@ function procesar(){
   }
   if(!ayer.kpis){ estado.innerHTML = '<span class="error">❌ Falta bloque kpis en AYER</span>'; return; }
 
-  // Normaliza generación total y keys por unidad
   flattenGenToKpis(hoy);
   flattenGenToKpis(ayer);
 
-  // Guarda HOY como AYER para la próxima ejecución
   localStorage.setItem(STORAGE_KEY, JSON.stringify(hoy));
 
-  // Actualiza histórico semanal
   const hist = loadHist();
   if(hoy.fecha) hist[hoy.fecha] = hoy;
   saveHist(hist);
@@ -398,7 +482,6 @@ function procesar(){
   document.getElementById('fecha').innerText = `Fecha HOY: ${hoy.fecha || '—'}  |  AYER: ${ayer.fecha || '—'}`;
   document.getElementById('ultima').innerText = 'Última actualización: ' + new Date().toLocaleString('es-CO');
 
-  // Render
   renderKpis(hoy,ayer);
   renderProduccion(hoy,ayer);
   renderConsignas(hoy);
@@ -415,6 +498,9 @@ function procesar(){
   estado.innerHTML='<span class="ok">✅ Actualizado. HOY guardado como AYER + histórico actualizado.</span>';
   debug.innerHTML = `<span class="small">KPIs extra guardados: <b>kpis.generacion_total_MW</b> y <b>kpis.gen_&lt;UNIDAD&gt;_MW</b> (si existe kpis_generacion). Gas por unidad requiere <b>consumo_gas_unidades</b> en HOY/AYER.</span>`;
 }
+
+/* ======= RESTO DE RENDERS (KPIs, generación, producción, resumen, alertas, gráfico, correo) ======= */
+/* (Estos son los mismos que ya tienes funcionando; se mantienen igual en tu dashboard) */
 
 function renderKpis(hoy,ayer){
   const kpis=[
@@ -441,6 +527,7 @@ function renderGenTotal(hoy,ayer){
   const d = h - a;
   let cls='ok', sym='—';
   if(d<0){cls='bad';sym='▼'} else if(d>0){sym='▲'}
+
   const div=document.createElement('div');
   div.className='k';
   div.innerHTML = `<div class="t">Generación total (MW)</div><div class="v ${cls}">${fmtNum(h)} MW <span class="small">${sym} ${fmtNum(d)} MW</span></div><div class="small">Ayer: ${fmtNum(a)} MW</div>`;
@@ -551,7 +638,6 @@ function renderAlertas(hoy){
   alerts.forEach(a=>{ const li=document.createElement('li'); li.className=a.cls; li.textContent=a.txt; ulA.appendChild(li); });
 }
 
-// ------- Gráfico semanal (single/dual) -------
 function getLast7Reports(){
   const hist = loadHist();
   const fechas = Object.keys(hist).sort();
@@ -644,12 +730,15 @@ function drawSeries(ctx, xs, ys, colorLine, colorPoint){
   });
 }
 
+function getCss(varName){
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
 function renderGrafico(){
   const canvas=document.getElementById('chart');
   const ctx=canvas.getContext('2d');
   const mode=document.getElementById('chartMode').value;
 
-  // show/hide single controls
   const singleOn = (mode==='single');
   document.getElementById('singleMetricBox').style.display = singleOn ? 'block' : 'none';
   document.getElementById('singleSourceBox').style.display = singleOn ? 'block' : 'none';
@@ -660,14 +749,13 @@ function renderGrafico(){
   const legend=document.getElementById('legend');
 
   if(data.length===0){
-    info.innerText='No hay histórico aún. Guarda reportes (Actualizar) para ver la semana.';
+    info.innerText='No hay histórico aún. Carga manifest.json para ver la semana.';
     legend.innerHTML='';
     return;
   }
 
   const labels=data.map(d=>d.fecha.slice(5));
 
-  // Prepare series
   let seriesA_name='', seriesB_name='';
   let valsA=[], valsB=[];
 
@@ -685,9 +773,8 @@ function renderGrafico(){
     valsB=[];
   }
 
-  // Collect for range
   const allVals = (mode==='dual') ? [...valsA, ...valsB] : [...valsA];
-  const pairs=allVals.map(v=>v).filter(v=>v!==null && !Number.isNaN(v));
+  const pairs=allVals.filter(v=>v!==null && !Number.isNaN(v));
   if(pairs.length===0){
     info.innerText='No hay datos para el modo/indicador seleccionado en los últimos reportes.';
     legend.innerHTML='';
@@ -706,7 +793,6 @@ function renderGrafico(){
   const xAt=(idx)=> m.l + (plotW*(idx/(Math.max(1,labels.length-1))));
   const yAt=(val)=> m.t + plotH*(1-((val-lo)/(hi-lo)));
 
-  // grid
   ctx.strokeStyle='rgba(255,255,255,.08)';
   ctx.lineWidth=1;
   ctx.font='12px system-ui';
@@ -718,30 +804,24 @@ function renderGrafico(){
     ctx.fillText(formatAxis(val), 8, y+4);
   }
 
-  // x labels
   ctx.fillStyle='rgba(233,240,255,.75)';
   labels.forEach((lab,i)=>{ const x=xAt(i); ctx.fillText(lab, x-14, H-16); });
 
-  // precompute x points
   const xs = labels.map((_,i)=>({x:xAt(i)}));
 
-  // draw series A
   const ysA = valsA.map(v => (v===null||Number.isNaN(v)) ? null : yAt(v));
   drawSeries(ctx, xs, ysA, getCss('--series1'), getCss('--ok'));
 
-  // draw series B if dual
   if(mode==='dual'){
     const ysB = valsB.map(v => (v===null||Number.isNaN(v)) ? null : yAt(v));
     drawSeries(ctx, xs, ysB, getCss('--series2'), getCss('--series2'));
   }
 
-  // title
   ctx.fillStyle='rgba(233,240,255,.9)';
   ctx.font='bold 13px system-ui';
   const title = (mode==='dual') ? 'Últimos 7 reportes – Generación vs Importación (MW)' : ('Últimos 7 reportes – ' + seriesA_name);
   ctx.fillText(title, m.l, 14);
 
-  // legend
   if(mode==='dual'){
     legend.innerHTML = `
       <div class="item"><span class="swatch" style="background:var(--series1)"></span> ${seriesA_name}</div>
@@ -754,10 +834,6 @@ function renderGrafico(){
   }
 
   info.innerText = `Reportes en histórico: ${Object.keys(loadHist()).length}. Mostrando: ${data[0].fecha} → ${data[data.length-1].fecha}.`;
-}
-
-function getCss(varName){
-  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }
 
 function construirTextoCorreo(){
@@ -787,219 +863,33 @@ function copiarCorreo(){
     .catch(()=>document.getElementById('correoEstado').innerText='❌ No se pudo copiar (permiso del navegador).');
 }
 
-function renderConsignas(hoy){
-  const ulC=document.getElementById('consignas'); ulC.innerHTML='';
-  if(Array.isArray(hoy.consignas) && hoy.consignas.length){
-    hoy.consignas.forEach(x=>{ const li=document.createElement('li'); li.textContent=x; ulC.appendChild(li); });
-  } else {
-    const li=document.createElement('li'); li.className='ok'; li.textContent='Sin consignas operativas'; ulC.appendChild(li);
-  }
-}
-
-function renderResumen(hoy){
-  const ulR=document.getElementById('resumen'); ulR.innerHTML='';
-  const demanda=hoy.kpis.demanda_promedio_MW;
-  const impGEB=hoy.kpis.importacion_GEB_230kV_MW;
-  const pctSTN=(Number(impGEB)/Number(demanda))*100;
-  const H=hoy.produccion_campos||{};
-  const bullets=[
-    `Demanda promedio ${fmtNum(demanda)} MW con dependencia STN (GEB 230 kV) del ${pctSTN.toFixed(1)}%.`,
-    `Producción total ${fmtNum(hoy.kpis.produccion_total_bbl)} bbl (Castilla ${fmtNum(H.Castilla||0)}, Apiay ${fmtNum(H.Apiay||0)}, Chichimene ${fmtNum(H.Chichimene||0)}, CPO9 ${fmtNum(H.CPO9||0)}).`,
-    `Diferida total ${fmtNum(hoy.kpis.diferida_total_bbl)} bbl.`,
-    `Generación total (según unidades reportadas): ${fmtNum(hoy.kpis.generacion_total_MW||0)} MW.`
-  ];
-  bullets.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; ulR.appendChild(li); });
-}
-
-function renderAlertas(hoy){
-  const ulA=document.getElementById('alertas'); ulA.innerHTML='';
-  const demanda=hoy.kpis.demanda_promedio_MW;
-  const impGEB=hoy.kpis.importacion_GEB_230kV_MW;
-  const pctSTN=(Number(impGEB)/Number(demanda))*100;
-  const pd=(Number(hoy.kpis.diferida_total_bbl)/Number(hoy.kpis.produccion_total_bbl))*100;
-  const alerts=[];
-  if(pctSTN>60) alerts.push({cls:'bad',txt:`Alta dependencia del STN: ${pctSTN.toFixed(1)}%`});
-  if(pd>3) alerts.push({cls:'bad',txt:`Diferida crítica: ${pd.toFixed(2)}%`});
-  else if(pd>1) alerts.push({cls:'warn',txt:`Diferida moderada: ${pd.toFixed(2)}%`});
-  const fuera = Object.values(hoy.kpis_generacion||{}).filter(u=>String(u.estado||'').toLowerCase().includes('indispon') || String(u.estado||'').toLowerCase().includes('fuera')).length;
-  if(fuera>=2) alerts.push({cls:'bad',txt:`Generación: ${fuera} unidades indisponibles simultáneamente.`});
-  if(alerts.length===0) alerts.push({cls:'ok',txt:'Sin alertas críticas por umbral.'});
-  alerts.forEach(a=>{ const li=document.createElement('li'); li.className=a.cls; li.textContent=a.txt; ulA.appendChild(li); });
-}
-
-function renderProduccion(hoy,ayer){
-  const pBox=document.getElementById('prodComparativo'); pBox.innerHTML='';
-  const H=hoy.produccion_campos||{}; const A=ayer.produccion_campos||{};
-  const get=(o,k)=>Number(o[k]||0);
-  const totH={Castilla:get(H,'Castilla'),Apiay:get(H,'Apiay'),Chichimene:get(H,'Chichimene'),CPO9:get(H,'CPO9')};
-  const totA={Castilla:get(A,'Castilla'),Apiay:get(A,'Apiay'),Chichimene:get(A,'Chichimene'),CPO9:get(A,'CPO9')};
-  totH['Total GAA']=totH.Castilla+totH.Apiay; totA['Total GAA']=totA.Castilla+totA.Apiay;
-  totH['Total GLH']=totH.Chichimene+totH.CPO9; totA['Total GLH']=totA.Chichimene+totA.CPO9;
-  totH['Total Sistema']=totH['Total GAA']+totH['Total GLH']; totA['Total Sistema']=totA['Total GAA']+totA['Total GLH'];
-
-  ['Castilla','Apiay','Total GAA','Chichimene','CPO9','Total GLH','Total Sistema'].forEach(campo=>{
-    const h=totH[campo]||0,a=totA[campo]||0,d=h-a; const p=a?((d/a)*100):0;
-    let cls='ok',sym='—';
-    if(p<=-3){cls='bad';sym='▼'}
-    else if(p<-1){cls='warn';sym='▼'}
-    else if(d>0){cls='ok';sym='▲'}
-    const div=document.createElement('div'); div.className='k';
-    if(campo.includes('Total')) div.style.background='rgba(255,255,255,.05)';
-    div.innerHTML=`<div class="t">${campo}</div><div class="v ${cls}">${fmtNum(h)} <span class="small">bbl</span></div><div class="small ${cls}">${sym} Δ ${fmtNum(d)} (${p.toFixed(2)}%)</div>`;
-    pBox.appendChild(div);
-  });
-}
-
 function cargarEjemplo(){
   const ayer={
     fecha:'2026-05-06', titulo:'Reporte', corte:'Ejemplo', gerencias:['GAA','GLH'], zonas:['Castilla','Apiay','Chichimene','CPO9'],
     consignas:['Sin consignas programadas'],
     produccion_campos:{Castilla:92979,Apiay:10916,Chichimene:57390,CPO9:31336},
-    kpis:{demanda_promedio_MW:304.32, importacion_GEB_230kV_MW:190.33, produccion_total_bbl:192621, diferida_total_bbl:1298},
-    kpis_generacion:{'TES-1':{estado:'Operando',potencia_MW:47.64},'TES-2':{estado:'Indisponible',potencia_MW:0},'TES-3':{estado:'Operando',potencia_MW:23.11},'TEO':{estado:'Indisponible',potencia_MW:0}}
+    kpis:{demanda_promedio_MW:304.32, importacion_GEB_230kV_MW:190.33, produccion_total_bbl:192621, diferida_total_bbl:1298, gas_total_KPC:15000, mwh_neta_total:2000, intensidad_gas_KPC_por_MWh_neta:7.5},
+    consumo_gas_unidades:{Termocoa:{KPC:5000,MWh_neta:700},'TES-1':{KPC:6000,MWh_neta:800},'TES-3':{KPC:4000,MWh_neta:500}},
+    kpis_generacion:{'TES-1':{estado:'Operando',potencia_MW:47.64},'TES-2':{estado:'Indisponible',potencia_MW:0},'TES-3':{estado:'Operando',potencia_MW:23.11},'TEO_TERMOCOA':{estado:'Operando',potencia_MW:35}}
   };
   const hoy={
     fecha:'2026-05-07', titulo:'Reporte', corte:'Ejemplo', gerencias:['GAA','GLH'], zonas:['Castilla','Apiay','Chichimene','CPO9'],
     consignas:['Frontera Suria–EMSA indisponible'],
     produccion_campos:{Castilla:95698,Apiay:9916,Chichimene:55483,CPO9:31780},
-    kpis:{demanda_promedio_MW:315.48, importacion_GEB_230kV_MW:195.5, produccion_total_bbl:192876, diferida_total_bbl:531},
-    kpis_generacion:{'TES-1':{estado:'Operando',potencia_MW:52.17},'TES-2':{estado:'Indisponible',potencia_MW:0},'TES-3':{estado:'Operando',potencia_MW:21.96},'TEO':{estado:'Indisponible',potencia_MW:0}}
+    kpis:{demanda_promedio_MW:315.48, importacion_GEB_230kV_MW:195.5, produccion_total_bbl:192876, diferida_total_bbl:531, gas_total_KPC:17000, mwh_neta_total:2100, intensidad_gas_KPC_por_MWh_neta:8.1},
+    consumo_gas_unidades:{Termocoa:{KPC:6000,MWh_neta:760},'TES-1':{KPC:6500,MWh_neta:820},'TES-3':{KPC:4500,MWh_neta:520}},
+    kpis_generacion:{'TES-1':{estado:'Operando',potencia_MW:52.17},'TES-2':{estado:'Indisponible',potencia_MW:0},'TES-3':{estado:'Operando',potencia_MW:21.96},'TEO_TERMOCOA':{estado:'Operando',potencia_MW:36}}
   };
   document.getElementById('jsonAyer').value = JSON.stringify(ayer, null, 2);
   document.getElementById('jsonHoy').value = JSON.stringify(hoy, null, 2);
-  document.getElementById('estado').innerHTML = '<span class="ok">Ejemplo cargado. Ahora presiona “Actualizar Dashboard”.</span>';
+  document.getElementById('estado').innerHTML = '<span class="ok">Ejemplo cargado. Ahora presiona “Actualizar Dashboard (manual)”.</span>';
 }
 
-
-// ================== SHAREPOINT: CARGA AUTOMÁTICA DE HISTÓRICO ==================
-
-
-
-
-function basePath(){
-  const u = new URL(window.location.href);
-
-  // Si se abrió desde SharePoint Forms (vista de biblioteca), sube al folder real
-  const idx = u.pathname.indexOf('/Forms/');
-  if(idx !== -1){
-    const realPath = u.pathname.substring(0, idx); // deja hasta .../Documentos%20compartidos
-    return u.origin + realPath + '/';
-  }
-
-  // Si se abrió el archivo directo, usa su carpeta
-  return u.origin + u.pathname.substring(0, u.pathname.lastIndexOf('/') + 1);
-}
-
-function fetchJson(fileName){
-  const clean = String(fileName).replace(/^\/+/,'');
-  const url = basePath() + clean;
-  console.log('Cargando:', url);
-  return fetch(url, {cache:'no-store'}).then(r=>{
-    if(!r.ok) throw new Error('No se pudo cargar: ' + url + ' (HTTP ' + r.status + ')');
-    return r.json();
-  });
-}
-
-function setSpStatus(msg, cls){
-  const el=document.getElementById('spStatus');
-  if(!el) return;
-  el.className = 'small ' + (cls||'');
-  el.textContent = msg;
-}
-
-function cargarHistoricoDesdeSharePoint(){
-  // Si se abre como file://, fetch puede fallar por políticas del navegador
-  if(location.protocol === 'file:'){
-    setSpStatus('⚠️ Abierto por file://. Para SharePoint use el enlace web.', 'warn');
-  } else {
-    setSpStatus('Cargando histórico desde SharePoint...', '');
-  }
-
-  fetchJson('manifest.json')
-    .then(manifest=>{
-      const fechas = (manifest.fechas || []).slice().sort();
-      if(fechas.length===0) throw new Error('manifest.json no tiene fechas');
-      const hist = {};
-      // Cargar secuencial para evitar saturación
-      let chain = Promise.resolve();
-      fechas.forEach(f=>{
-        chain = chain.then(()=>fetchJson(f+'.json').then(rep=>{ hist[f]=rep; }));
-      });
-      return chain.then(()=>({hist,fechas}));
-    })
-    .then(({hist,fechas})=>{
-      saveHist(hist);
-      // poblar selector
-      const sel=document.getElementById('fechaSelect');
-      if(sel){
-        sel.innerHTML='';
-        fechas.forEach(f=>{
-          const opt=document.createElement('option');
-          opt.value=f;
-          opt.textContent=f;
-          sel.appendChild(opt);
-        });
-        sel.value = fechas[fechas.length-1];
-      }
-      // Renderizar último día
-      renderFromHist(fechas[fechas.length-1]);
-      setSpStatus('✅ Histórico cargado: '+fechas.length+' fechas.', 'ok');
-    })
-    .catch(err=>{
-      console.error(err);
-      setSpStatus('❌ Error SharePoint: '+err.message, 'error');
-    });
-}
-
-function renderFromHist(fechaHoy){
-  const hist = loadHist();
-  const fechas = Object.keys(hist).sort();
-  if(fechas.length===0){
-    document.getElementById('estado').innerHTML = '<span class="error">❌ No hay histórico cargado. Use “Recargar histórico”.</span>';
-    return;
-  }
-  // si fecha no existe, tomar último
-  if(!hist[fechaHoy]) fechaHoy = fechas[fechas.length-1];
-  const idx = fechas.indexOf(fechaHoy);
-  const fechaAyer = (idx>0) ? fechas[idx-1] : fechas[idx];
-
-  const hoy = hist[fechaHoy];
-  const ayer = hist[fechaAyer];
-
-  // Mostrar en panel (opcional) para trazabilidad
-  const tHoy=document.getElementById('jsonHoy');
-  const tAyer=document.getElementById('jsonAyer');
-  if(tHoy) tHoy.value = JSON.stringify(hoy, null, 2);
-  if(tAyer) tAyer.value = JSON.stringify(ayer, null, 2);
-
-  // Normaliza generación
-  flattenGenToKpis(hoy);
-  flattenGenToKpis(ayer);
-
-  // Actualiza cabecera
-  document.getElementById('fecha').innerText = `Fecha HOY: ${hoy.fecha||'—'}  AYER: ${ayer.fecha||'—'}`;
-  document.getElementById('ultima').innerText = 'Última actualización: ' + new Date().toLocaleString('es-CO');
-
-  // Render
-  renderKpis(hoy,ayer);
-  renderProduccion(hoy,ayer);
-  renderConsignas(hoy);
-  renderResumen(hoy);
-  renderAlertas(hoy);
-  renderGenTotal(hoy,ayer);
-  renderComparativoGeneracion(hoy,ayer);
-  renderConsumoGas(hoy,ayer);
-  if(typeof renderConsumoGasPorUnidad === 'function') renderConsumoGasPorUnidad(hoy,ayer);
-
+/* ===== INIT ===== */
+(function init(){
   refreshMetricOptions();
   renderGrafico();
-
-  document.getElementById('estado').innerHTML = '<span class="ok">✅ Mostrando histórico desde SharePoint.</span>';
-}
-
-(function init(){
-  // Intenta cargar SharePoint automáticamente
-  cargarHistoricoDesdeSharePoint();
+  cargarHistoricoWeb();
 })();
 </script>
 </body>
