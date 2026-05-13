@@ -7,91 +7,59 @@
   "consignas": [
     "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
     "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
-    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1.",
-    "• Se tiene planeado mantenimiento programado ciclo de 1.000 horas para la unidad TES-3 en el horario 05:00 a 16:00 (día 05/05)."
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1."
   ],
-  "kpis": {
-    "demanda_promedio_MW": 317.11,
-    "importacion_GEB_230kV_MW": 197.88,
-    "importacion_Cenit_MW": 48.79,
-    "dependencia_STN_pct": 62.39,
-
-    "generacion_total_MW": 92.51,
-    "Termosuria_total_MW": 76.81,
-
-    "produccion_total_bbl": 195320,
-    "diferida_total_bbl": 237,
-    "diferida_Castilla_pct": 0.05,
-    "diferida_Chichimene_pct": 0.28,
-    "diferida_Apiay_pct": 0.24,
-    "diferida_CPO9_pct": 0.0,
-
-    "gas_total_KPC": 12151.0,
-    "mwh_neta_total": 1288.2,
-    "intensidad_gas_KPC_por_MWh_neta": 9.43,
-
-    "delta_gas_vs_ayer_pct": 0.15,
-    "delta_intensidad_gas_vs_ayer_pct": -0.25,
-    "alerta_variacion_gas": "OK"
-  },
-  "consumo_gas_unidades": {
-    "Termocoa": { "KPC": 0.0, "MWh_neta": 0.0 },
-    "TES-1": { "KPC": 6631.0, "MWh_neta": 732.76 },
-    "TES-3": { "KPC": 5520.0, "MWh_neta": 555.43 }
-  },
-  "kpis_generacion": {
-    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-1": { "estado": "Operando", "potencia_MW": 53.67 },
-    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-3": { "estado": "Operando", "potencia_MW": 23.14 },
-
-    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 2.56 },
-    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 8.20 },
-
-    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.17 },
-    "APG_GGCH": { "estado": "Operando", "potencia_MW": 2.57 },
-    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.20 },
-    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
-  },
   "produccion_campos": {
     "Castilla": 94521,
     "Apiay": 10625,
     "Chichimene": 57805,
     "CPO9": 32369
   },
-  "eventos": [
-    "• 07:09 – 08:15 En Chichimene fuera de línea generador AXG-7490A de APG.",
-    "• 07:09 – 08:32 En Chichimene fuera de línea generador AXG-7490C de APG.",
-    "• 17:43 – 19:07 En Chichimene fuera de línea generador AXG-7490A de APG.",
-    "• 14:49 – 15:15 En Chichimene maniobra traslado de carga LB3 a LB2-CMTN para aislamiento tramo CL25 a CL15 para retiro de nido."
-  ],
-  "diferida_detalle": {
-    "CASTILLA": { "Cabezal_mtto": 50, "Red_energia_falla": 0, "VSD_falla": 0, "Total": 50 },
-    "CHICHIMENE": { "Cabezal_mtto": 103, "Red_energia_falla": 58, "VSD_falla": 0, "Total": 162 },
-    "APIAY": { "Cabezal_mtto": 0, "Red_energia_falla": 0, "VSD_falla": 25, "Total": 25 },
-    "CPO9": { "Cabezal_mtto": 0, "Red_energia_falla": 0, "VSD_falla": 0, "Total": 0 }
+  "kpis": {
+    "demanda_promedio_MW": 317.11,
+    "importacion_GEB_230kV_MW": 197.88,
+    "importacion_Cenit_MW": 48.79,
+    "generacion_total_MW": 69.36,
+    "dependencia_STN_pct": 62.40,
+
+    "produccion_total_bbl": 195320,
+    "diferida_total_bbl": 237,
+
+    "gas_total_KPC": 12151.0,
+    "mwh_neta_total": 1288.2,
+    "intensidad_gas_KPC_por_MWh_neta": 9.43,
+    "termica_MW_promedio": 53.67,
+    "gas_KPC_por_MW_termico": 226.38,
+
+    "delta_gas_vs_ayer_pct": 0.15,
+    "delta_intensidad_gas_vs_ayer_pct": -0.25,
+    "alerta_variacion_gas": "OK"
   },
-  "novedades_madrugada": [
-    "• 05:00:00 Termocoa 0 MW (indisponible).",
-    "• 05:00:00 Termosuria 54,62 MW (TES-1 30,67 MW + TES-2 0 MW + TES-3 23,95 MW).",
-    "• 05:00:00 Apiay 1,14 MW.",
-    "• 05:00:00 PGG_EA1 1,40 MW.",
-    "• 05:00:00 APG_GGCH 2,96 MW.",
-    "• 05:00:00 Frontera GEB 230 kV importando 202,4 MW.",
-    "• 05:00:00 Frontera Cenit importando 57,02 MW.",
-    "• 05:00:00 Demanda San Fernando-Cenit 9,6 MW; Demanda EBA-Cenit 1,6 MW.",
-    "• 00:37:00 En el circuito P5-CDS dispara con recierre efectivo RC P5-RC24 por falla monofásica (50-BG), deslastra 2,6 MW carga de pozos. Causa no identificada. Diferida: 1 bbl."
-  ],
-  "riesgos": [
-    "Dependencia del STN alta (>60%) con TES-2 y TEO/Termocoa indisponibles.",
-    "Intensidad gas alta (~9,43 KPC/MWh neta) y TES-3 con intensidad específica alta (~9,94 KPC/MWh).",
-    "Riesgo de fallas asociadas a fauna/nidos en red, con antecedentes recientes."
-  ],
-  "recomendaciones": [
-    "Preparar estrategia operativa por mantenimiento programado TES-3 (05:00–16:00 del 05/05): monitorear dependencia STN y ajustar despacho local disponible.",
-    "Seguimiento diario de eficiencia de gas: TES-3 mantiene intensidad alta; ajustar reparto de carga térmica si es viable.",
-    "Revisar causa del evento P5-CDS (50-BG) y aplicar acciones preventivas (aislamiento, fauna, inspección RC y tramo asociado).",
-    "Continuar acciones de mitigación de fauna/nidos en circuitos críticos (LB3/LB2) para evitar recurrencias."
+  "consumo_gas_unidades": {
+    "Termocoa": {
+      "KPC": 0.0,
+      "MWh_neta": 0.0
+    },
+    "TES-1": {
+      "KPC": 6631.0,
+      "MWh_neta": 732.76
+    },
+    "TES-3": {
+      "KPC": 5520.0,
+      "MWh_neta": 555.43
+    }
+  },
+  "kpis_generacion": {
+    "TES-1": { "estado": "Operando", "potencia_MW": 30.53 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.14 },
+    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0 }
+  },
+  "resumen": [
+    "Demanda promedio 317,11 MW con dependencia STN ~62,40%.",
+    "Consumo de gas 12.151 KPC con intensidad promedio 9,43 KPC/MWh neta.",
+    "Generación térmica promedio 53,67 MW calculada con MWh neta / 24 h.",
+    "Producción total 195.320 bbl con diferida total de 237 bbl."
   ],
   "raw": ""
 }
