@@ -195,6 +195,13 @@ function cargarTodo(){
 }
 
 window.addEventListener('DOMContentLoaded', cargarTodo);
+
+// Alias de compatibilidad (por versiones antiguas)
+function renderDesdeFecha(fecha){
+  return renderFromHist(fecha);
+}
+
+
 </script>
 </body>
 </html>
