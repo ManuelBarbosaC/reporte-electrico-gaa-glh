@@ -7,96 +7,59 @@
   "consignas": [
     "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
     "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
-    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1.",
-    "• Se tiene planeado parada por condición para la unidad TES-1 en el horario de 10:00 a 15:00 horas (día 06/05)."
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina."
   ],
-  "kpis": {
-    "demanda_promedio_MW": 306.14,
-    "importacion_GEB_230kV_MW": 190.33,
-    "importacion_Cenit_MW": 50.13,
-    "dependencia_STN_pct": 62.17,
-
-    "generacion_total_MW": 87.79,
-    "Termosuria_total_MW": 70.75,
-
-    "produccion_total_bbl": 192621,
-    "diferida_total_bbl": 1298,
-    "diferida_pct_sobre_produccion": 0.67,
-
-    "gas_total_KPC": 10743.0,
-    "mwh_neta_total": 1143.3,
-    "intensidad_gas_KPC_por_MWh_neta": 9.40,
-
-    "delta_gas_vs_ayer_pct": 8.88,
-    "delta_intensidad_gas_vs_ayer_pct": -1.44,
-    "alerta_variacion_gas": "OK"
-  },
-  "consumo_gas_unidades": {
-    "Termocoa": { "KPC": 0.0, "MWh_neta": 0.0 },
-    "TES-1": { "KPC": 5273.0, "MWh_neta": 588.6 },
-    "TES-3": { "KPC": 5470.0, "MWh_neta": 554.7 }
-  },
-  "kpis_generacion": {
-    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-1": { "estado": "Operando/Intervención", "potencia_MW": 47.64 },
-    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-3": { "estado": "Operando", "potencia_MW": 23.11 },
-
-    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 2.98 },
-    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 9.89 },
-
-    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.13 },
-    "APG_GGCH": { "estado": "Operando", "potencia_MW": 1.87 },
-    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.17 },
-    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
-  },
   "produccion_campos": {
     "Castilla": 92979,
     "Apiay": 10916,
     "Chichimene": 57390,
     "CPO9": 31336
   },
-  "eventos": [
-    "• 00:30 En Chichimene en línea generador AXG-7490C de APG.",
-    "• 03:15 – 04:20 En Castilla, fuera de línea generador G902 de COPOWER.",
-    "• 07:10 – 17:52 En Chichimene fuera de línea generador AXG-7490C de APG.",
-    "• 09:34 – 10:04 En Apiay fuera de línea generador AXG901B de CCMSI.",
-    "• 10:59 En Chichimene fuera de línea generador AXG-7490A de APG para trabajos en el filtro coalescente.",
-    "• 10:22 Fuera de línea unidad de generación TES-1 para retiro de limaduras en aceite de sumidero.",
-    "• 11:01 – 17:20 Cierre en ambos extremos línea CDO-TEO 115 kV para pruebas a equipos en TEO.",
-    "• 13:39 – 14:17 En Apiay fuera de línea generador AXG191C de ERA.",
-    "• 15:52 – 21:53 En Chichimene en línea generador AXG-7490B de APG.",
-    "• 22:14 En Chichimene fuera de línea generador AXG-7490C de APG.",
-    "• 09:18 – 10:50 En Apiay aislamiento bahía 34,5 kV TR40 en CDA para inspección/limpieza/ajuste.",
-    "• 10:58 – 13:14 En Apiay aislamiento bahía 34,5 kV TR50 en CDA para inspección/limpieza/ajuste.",
-    "• 09:46 – 19:51 En Apiay traslado de carga P2-CDA a P1-CDA para instalación de cortacircuito 3 etapas (arranque GV-4).",
-    "• 10:04 – 17:31 En Castilla traslado circuitos P9/P10-CMT barra 1 a barra 2 para preparación salida TES-1."
-  ],
-  "diferida_detalle": {
-    "CASTILLA": { "Energia_tercero_falla": 0, "VSD_falla": 0, "VSD_mtto": 0, "Total": 0 },
-    "CHICHIMENE": { "Energia_tercero_falla": 0, "VSD_falla": 47, "VSD_mtto": 10, "Total": 57 },
-    "APIAY": { "Energia_tercero_falla": 0, "VSD_falla": 0, "VSD_mtto": 0, "Total": 0 },
-    "CPO9": { "Energia_tercero_falla": 1241, "VSD_falla": 0, "VSD_mtto": 0, "Total": 1241 }
+  "kpis": {
+    "demanda_promedio_MW": 306.14,
+    "importacion_GEB_230kV_MW": 190.33,
+    "importacion_Cenit_MW": 50.13,
+    "generacion_total_MW": 64.68,
+    "dependencia_STN_pct": 62.17,
+
+    "produccion_total_bbl": 192621,
+    "diferida_total_bbl": 1298,
+
+    "gas_total_KPC": 10743.0,
+    "mwh_neta_total": 1143.3,
+    "intensidad_gas_KPC_por_MWh_neta": 9.40,
+    "termica_MW_promedio": 47.64,
+    "gas_KPC_por_MW_termico": 225.41,
+
+    "delta_gas_vs_ayer_pct": 8.88,
+    "delta_intensidad_gas_vs_ayer_pct": -1.44,
+    "alerta_variacion_gas": "OK"
   },
-  "novedades_madrugada": [
-    "• 05:00:00 Termocoa 0 MW (indisponible).",
-    "• 05:00:00 Termosuria 62,65 MW (TES-1 38,75 MW + TES-2 0 MW + TES-3 23,9 MW).",
-    "• 05:00:00 Apiay 1,2 MW.",
-    "• 05:00:00 PGG_EA1 1,4 MW.",
-    "• 05:00:00 APG_GGCH 0 MW.",
-    "• 05:00:00 Frontera GEB 230 kV importando 192,8 MW.",
-    "• 05:00:00 Frontera Cenit importando 56,32 MW."
-  ],
-  "riesgos": [
-    "Dependencia STN > 60% por indisponibilidades (TEO/Termocoa y TES-2).",
-    "Diferida alta en CPO9 (3,96%) asociada a fallas/energía de tercero.",
-    "TES-1 con intervención por condición (retiro de limaduras) y pruebas de equipos en TEO/115 kV."
-  ],
-  "recomendaciones": [
-    "Seguir plan de recuperación de disponibilidad (TES-2 y TEO/Termocoa) para reducir dependencia STN.",
-    "Cerrar acciones de confiabilidad en CPO9 por alto peso de diferida (energía tercero falla).",
-    "Mantener seguimiento post intervención TES-1 (condición de aceite/sumidero) y resultados de pruebas en TEO/115 kV.",
-    "Continuar mitigación de riesgos SCADA (TR40, señales análogas, medición CPO9) para mejorar observabilidad."
+  "consumo_gas_unidades": {
+    "Termocoa": {
+      "KPC": 0.0,
+      "MWh_neta": 0.0
+    },
+    "TES-1": {
+      "KPC": 5273.0,
+      "MWh_neta": 588.6
+    },
+    "TES-3": {
+      "KPC": 5470.0,
+      "MWh_neta": 554.7
+    }
+  },
+  "kpis_generacion": {
+    "TES-1": { "estado": "Operando", "potencia_MW": 24.53 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.11 },
+    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0 }
+  },
+  "resumen": [
+    "Demanda promedio 306,14 MW con dependencia STN ~62,17%.",
+    "Consumo de gas 10.743 KPC con intensidad promedio 9,40 KPC/MWh neta.",
+    "Generación térmica promedio 47,64 MW calculada con MWh neta / 24 h.",
+    "Producción total 192.621 bbl con diferida total de 1.298 bbl (mayor impacto en CPO9)."
   ],
   "raw": ""
 }
