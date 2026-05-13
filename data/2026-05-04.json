@@ -28,7 +28,7 @@
     "gas_total_KPC": 12151.0,
     "mwh_neta_total": 1288.2,
     "intensidad_gas_KPC_por_MWh_neta": 9.43,
-    "termica_MW_promedio": 53.67,
+    "termica_MW_promedio": 53.68,
     "gas_KPC_por_MW_termico": 226.38,
 
     "delta_gas_vs_ayer_pct": 0.15,
@@ -42,11 +42,11 @@
     },
     "TES-1": {
       "KPC": 6631.0,
-      "MWh_neta": 732.76
+      "MWh_neta": 732.8
     },
     "TES-3": {
       "KPC": 5520.0,
-      "MWh_neta": 555.43
+      "MWh_neta": 555.4
     }
   },
   "kpis_generacion": {
@@ -58,29 +58,27 @@
   "resumen": [
     "Demanda promedio 317,11 MW con dependencia STN ~62,40%.",
     "Consumo de gas 12.151 KPC con intensidad promedio 9,43 KPC/MWh neta.",
-    "Generación térmica promedio 53,67 MW calculada con MWh neta / 24 h.",
+    "Generación térmica promedio 53,68 MW calculada con energía neta / 24 h.",
     "Producción total 195.320 bbl con diferida total de 237 bbl."
   ],
-  
   "novedades_madrugada": [
     "05:00 Termocoa genera 0 MW (indisponible).",
-    "05:00 Termosuria genera 54,62 MW (TES-1 30,67 MW + TES-3 23,95 MW).",
-    "05:00 Frontera GEB 230 kV importando 202,4 MW.",
-    "05:00 Frontera Cenit importando 57,02 MW.",
-    "Evento P5-CDS 50-BG con deslastre 2,6 MW de pozos en Apiay (diferida 1 bbl)."
+    "05:00 Termosuria genera 54,62 MW (TES-1 30,67 MW + TES-2 0 MW + TES-3 23,95 MW).",
+    "05:00 Apiay genera 1,14 MW. PGG_EA1 1,40 MW. APG_GGCH 2,96 MW.",
+    "05:00 Frontera GEB 230 kV importando 202,4 MW. Frontera Cenit importando 57,02 MW.",
+    "00:37 Circuito P5-CDS: recierre efectivo (50-BG), deslastre 2,6 MW de pozos. Diferida 1 bbl."
   ],
   "riesgos": [
-    "Alta dependencia del STN (~62%) por indisponibilidad de TES-2 y Termocoa.",
-    "Eventos recurrentes en red de Apiay (P5-CDS) con causa no identificada.",
-    "Eficiencia térmica ajustada: intensidad gas ~9,4 KPC/MWh.",
-    "Exposición a eventos externos del STR EMSA sin respaldo térmico suficiente."
+    "Dependencia del STN alta (>60%) con TES-2 y TEO/Termocoa indisponibles.",
+    "Eficiencia térmica ajustada: intensidad gas ~9,43 KPC/MWh neta.",
+    "Riesgo de recurrencia de eventos en red (P5-CDS) con causa no identificada.",
+    "Vulnerabilidad ante perturbaciones externas por baja holgura térmica disponible."
   ],
   "recomendaciones": [
-    "Priorizar acciones para reducción de dependencia STN mientras TES-2 permanece indisponible.",
-    "Analizar causa raíz del evento P5-CDS (50-BG) y definir acciones preventivas.",
-    "Optimizar despacho térmico manteniendo carga estable en TES-1 y TES-3.",
-    "Mantener seguimiento diario a intensidad de gas para evitar degradación de eficiencia."
+    "Mantener vigilancia operativa por dependencia STN >60% mientras TES-2 y TEO permanezcan indisponibles.",
+    "Analizar y corregir causa del evento P5-CDS (50-BG): inspección RC, tramo asociado y posibles factores de fauna/aislamiento.",
+    "Optimizar despacho térmico priorizando operación estable (evitar transitorios que suban intensidad gas).",
+    "Asegurar trazabilidad de maniobras y aislamientos para correlación con diferidas y reducción de recurrencia."
   ],
-
   "raw": ""
 }
