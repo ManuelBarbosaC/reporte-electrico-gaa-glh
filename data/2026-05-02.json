@@ -68,7 +68,29 @@
   "diferida_detalle": {
     "CASTILLA": { "Transformador_SUT_falla": 0, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 218, "Total": 218 },
     "CHICHIMENE": { "Transformador_SUT_falla": 85, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 0, "Total": 85 },
-    "APIAY": { "Transformador_SUT_falla": 0, "Red_energia_falla": 1, "Energia_tercero_mtto": 2,
-        ],
+    "APIAY": { "Transformador_SUT_falla": 0, "Red_energia_falla": 1, "Energia_tercero_mtto": 2, "VSD_falla": 25, "Total": 28 },
+    "CPO9": { "Transformador_SUT_falla": 0, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 96, "Total": 96 }
+  },
+  "novedades_madrugada": [
+    "• 05:00:00 Termocoa 0 MW (indisponible).",
+    "• 05:00:00 Termosuria 54,8 MW (TES-1 30,87 MW + TES-2 0 MW + TES-3 23,93 MW).",
+    "• 05:00:00 Apiay 1,15 MW.",
+    "• 05:00:00 PGG_EA1 1,56 MW.",
+    "• 05:00:00 APG_GGCH 2,85 MW.",
+    "• 05:00:00 Frontera GEB 230 kV importando 201,94 MW.",
+    "• 05:00:00 Frontera Cenit importando 54,89 MW.",
+    "• 05:00:00 Demanda San Fernando-Cenit 9,19 MW; Demanda EBA-Cenit 1,12 MW."
+  ],
+  "riesgos": [
+    "Dependencia del STN muy alta (~63,4%) con TES-2 y TEO indisponibles.",
+    "Intensidad gas alta (~9,44 KPC/MWh neta). TES-3 mantiene intensidad específica alta.",
+    "Eventos de red (P3-CDS) y trabajos en CH51 requieren seguimiento para evitar recurrencias."
+  ],
+  "recomendaciones": [
+    "Mantener vigilancia operativa por dependencia STN > 60% mientras TES-2 y TEO continúen indisponibles.",
+    "Seguimiento diario de eficiencia gas: TES-3 continúa con intensidad alta; ajustar reparto de carga si es viable.",
+    "Analizar causa y acciones preventivas del disparo P3-CDS (50-AG) para evitar repetición.",
+    "Continuar cierre de pendientes SCADA para mejorar observabilidad (TR40 Apiay, señales análogas, medición CPO9)."
+  ],
   "raw": ""
 }
