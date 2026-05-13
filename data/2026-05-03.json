@@ -62,7 +62,38 @@
     "• 10:56 – 11:59 En Chichimene fuera de línea generador AXG-7490A de APG.",
     "• 13:48 – 15:45 En Chichimene fuera de línea generador AXG-7490 A/C de APG.",
     "• 16:51 – 17:16 En Chichimene fuera de línea generador AXG-7490C de APG.",
-    "• 21:04 – 23:31 En Castilla fuera de línea generadores G901 y G902",
-      ],
+    "• 21:04 – 23:31 En Castilla fuera de línea generadores G901 y G902 de COPOWER.",
+    "• 22:45 – 23:15 En Chichimene fuera de línea generador AXG-7490A de APG.",
+    "• 22:45 – 23:25 En Chichimene fuera de línea generador AXG-7490C de APG.",
+    "• 14:20:36 En Castilla, circuito P8-CMD disparo con recierre efectivo RC intermedio RC_B CL68 salida a CL21 por falla monofásica (50-AG). Deslastre 5,93 MW carga pozos y 3,83 MW carga EC3. Diferida 158 bbl (20 pozos productores).",
+    "• 23:31:43 En Chichimene, circuito LB3-CMTN disparo con recierre efectivo RC entrada CL33 por falla monofásica (50-AG). Deslastre 3,0 MW carga de pozos. Pendiente identificar causa. Diferida 43 bbl (13 pozos productores)."
+  ],
+  "diferida_detalle": {
+    "CASTILLA": { "Red_energia_falla": 158, "VSD_falla": 74, "VSD_mtto": 0, "Total": 231 },
+    "CHICHIMENE": { "Red_energia_falla": 43, "VSD_falla": 73, "VSD_mtto": 47, "Total": 163 },
+    "APIAY": { "Red_energia_falla": 0, "VSD_falla": 0, "VSD_mtto": 0, "Total": 0 },
+    "CPO9": { "Red_energia_falla": 0, "VSD_falla": 30, "VSD_mtto": 0, "Total": 30 }
+  },
+  "novedades_madrugada": [
+    "• 05:00:00 Termocoa 0 MW (indisponible).",
+    "• 05:00:00 Termosuria 54,68 MW (TES-1 30,73 MW + TES-2 0 MW + TES-3 23,95 MW).",
+    "• 05:00:00 Apiay 1,14 MW.",
+    "• 05:00:00 PGG_EA1 1,40 MW.",
+    "• 05:00:00 APG_GGCH 2,94 MW.",
+    "• 05:00:00 Frontera GEB 230 kV importando 201,40 MW.",
+    "• 05:00:00 Frontera Cenit importando 57,13 MW.",
+    "• 05:00:00 Demanda San Fernando-Cenit 9,60 MW; Demanda EBA-Cenit 0,80 MW."
+  ],
+  "riesgos": [
+    "Dependencia del STN alta (~62,6%) con TES-2 y TEO indisponibles.",
+    "Intensidad gas alta (~9,46 KPC/MWh neta) y TES-3 con intensidad específica elevada (~9,94 KPC/MWh).",
+    "Eventos en red P8-CMD y LB3-CMTN con diferidas relevantes y causas pendientes por confirmar."
+  ],
+  "recomendaciones": [
+    "Priorizar análisis causa raíz y acciones preventivas por disparos P8-CMD y LB3-CMTN (50-AG); revisar aislamiento/cortacircuitos y fauna si aplica.",
+    "Mantener vigilancia por dependencia STN > 60% mientras TES-2 y TEO permanezcan indisponibles; priorizar retorno de capacidad térmica.",
+    "Seguimiento de eficiencia gas: TES-3 continúa con intensidad alta; ajustar reparto de carga térmica si es viable.",
+    "Continuar plan de cierre de pendientes SCADA (TR40 Apiay, señales análogas, medición CPO9) para mejorar supervisión."
+  ],
   "raw": ""
 }
