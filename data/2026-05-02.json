@@ -69,3 +69,6 @@
     "CASTILLA": { "Transformador_SUT_falla": 0, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 218, "Total": 218 },
     "CHICHIMENE": { "Transformador_SUT_falla": 85, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 0, "Total": 85 },
     "APIAY": { "Transformador_SUT_falla": 0, "Red_energia_falla": 1, "Energia_tercero_mtto": 2,
+        ],
+  "raw": ""
+}
