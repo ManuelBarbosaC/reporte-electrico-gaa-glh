@@ -62,28 +62,6 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
 </header>
 <main>
 
-//<div class="card">
-  <h3 style="margin:0">Carga de JSON (AYER / HOY)
-    <button onclick="toggleJson()" style="float:right">Mostrar / Ocultar</button>
-  </h3>
-  <div id="jsonPanel" style="margin-top:10px;display:none">
-    <div class="small">Pega SOLO el JSON (desde <b>{</b> hasta <b>}</b>). Si copias del chat con ```json ... ```, el sistema lo limpia automáticamente.</div>
-    <div class="hr"></div>
-    <b>JSON AYER</b>
-    <textarea id="jsonAyer" placeholder="Pega aquí el JSON AYER..."></textarea>
-    <b>JSON HOY</b>
-    <textarea id="jsonHoy" placeholder="Pega aquí el JSON HOY..."></textarea>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-      <button onclick="procesar()">Actualizar Dashboard</button>
-      <button class="secondary" onclick="borrarHistorico()">Borrar histórico</button>
-      <button class="secondary" onclick="borrarAyer()">Borrar AYER guardado</button>
-      <button class="secondary" onclick="cargarEjemplo()">Cargar ejemplo</button>
-    </div>
-    <div id="estado" class="small" style="margin-top:10px"></div>
-    <div class="small" id="debug" style="margin-top:8px"></div>
-  </div>
-//</div>
-
 <div class="card">
   <h3 style="margin:0">📈 Histórico semanal (últimos 7 reportes)</h3>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px">
