@@ -4,85 +4,78 @@
   "corte": "Reporte 2026-05-12 (fecha de reporte)",
   "gerencias": ["GAA", "GLH"],
   "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+
   "consignas": [
     "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
     "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
     "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina."
   ],
+
   "kpis": {
     "demanda_promedio_MW": 308.56,
     "importacion_GEB_230kV_MW": 170.29,
     "importacion_Cenit_MW": 23.19,
     "dependencia_STN_pct": 55.19,
 
-    "generacion_total_MW": 137.14,
-    "Termosuria_total_MW": 82.78,
-
-    "produccion_total_bbl": 185066,
-    "diferida_total_bbl": 153,
-    "diferida_Apiay_pct": 0.23,
-    "diferida_CPO9_pct": 0.0,
+    "Termosuria_promedio_MW": 59.60,
+    "Termocoa_promedio_MW": 40.07,
+    "termica_promedio_MW": 99.67,
 
     "gas_total_KPC": 21424.8,
     "mwh_neta_total": 2392.4,
     "intensidad_gas_KPC_por_MWh_neta": 8.96,
 
-    "termica_MW_promedio": 122.85,
-    "gas_KPC_por_MW_termico": 174.3,
-
-    "delta_gas_vs_ayer_pct": 2.05,
-    "delta_intensidad_gas_vs_ayer_pct": -0.06,
-    "alerta_variacion_gas": "OK"
+    "produccion_total_bbl": 185066,
+    "diferida_total_bbl": 153,
+    "diferida_pct_sobre_produccion": 0.08
   },
+
   "consumo_gas_unidades": {
     "Termocoa": { "KPC": 7937.8, "MWh_neta": 961.8 },
-    "TES-1": { "KPC": 7947.0, "MWh_neta": 874.4 },
-    "TES-3": { "KPC": 5540.0, "MWh_neta": 556.2 }
+    "TES-1": { "KPC": 7947.0, "MWh_neta": 874.42 },
+    "TES-3": { "KPC": 5540.0, "MWh_neta": 556.18 }
   },
+
   "kpis_generacion": {
-    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 40.07 },
-    "TES-1": { "estado": "Operando", "potencia_MW": 59.61 },
-    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-3": { "estado": "Operando", "potencia_MW": 23.17 },
-
-    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 2.75 },
-    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 9.24 },
-
-    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.08 },
-    "APG_GGCH": { "estado": "Operando", "potencia_MW": 0.11 },
-    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.11 },
-    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
+    "TES-1": {
+      "estado": "Operando",
+      "potencia_promedio_MW": 36.43
+    },
+    "TES-2": {
+      "estado": "Indisponible",
+      "potencia_promedio_MW": 0.0
+    },
+    "TES-3": {
+      "estado": "Operando",
+      "potencia_promedio_MW": 23.17
+    },
+    "TERMOCOA": {
+      "estado": "Operando",
+      "potencia_promedio_MW": 40.07
+    }
   },
+
   "produccion_campos": {
     "Castilla": 93145,
     "Apiay": 10601,
     "Chichimene": 55258,
     "CPO9": 26061
   },
+
   "eventos": [
-    "• 08:15 – 14:02 Por exportación de energía por frontera EMSA, se cierra acople de barras en CDF 115 kV y se abre línea Cenit-OCOA en Cenit.",
-    "• 10:15 – 13:27 En Apiay fuera de línea generador AXG-901B de CCMSI para mantenimiento eléctrico.",
-    "• 15:22 – 15:39 En Chichimene en línea generador AXG-7490C de APG.",
-    "• 21:38 – 22:15 En Chichimene en línea generador AXG-7490C de APG.",
+    "• 08:15 – 14:02 Por exportación EMSA, se cierra acople de barras en CDF 115 kV y se abre línea Cenit-OCOA en Cenit.",
+    "• 10:15 – 13:27 En Apiay fuera de línea AXG-901B de CCMSI por mantenimiento eléctrico.",
     "• 22:56 – 23:28 En Castilla fuera de línea generadores G901/902 de COPOWER.",
-    "• 08:42 – 16:34 En Apiay traslado de carga de TR1-CDS a TR2-CDS para aislamiento y pintura siliconada a TR1-CDS.",
-    "• 19:55:18 En circuito EBA-CDS disparo con recierre efectivo RC EBA-RC27 por falla monofásica (50-BG); deslastre 0,15 MW pozo inyector y 0,3 MW planta EBA-Cenit; diferida 0 bbl.",
-    "• 09:50 – 16:10 En Apiay aislamiento transformador ATX-902 de CCMSI para mantenimiento eléctrico."
+    "• 19:55:18 En circuito EBA-CDS disparo con recierre RC EBA-RC27 (50-BG), deslastre menor. Diferida 0 bbl."
   ],
+
   "novedades_madrugada": [
-    "• 04:05 – 04:55 En Apiay fuera de línea generador AXG-901B de CCMSI.",
-    "• 04:05:30 En circuito P5-CDS operación cortacircuito fase A en subestación pozo SS11 (inactivo), deslastre 0,8 MW y salida AXG-901B. Diferida 5 bbl."
+    "• 05:00 Termocoa 40,45 MW.",
+    "• 05:00 Termosuria 60,8 MW (TES-1 36,84 + TES-3 23,96).",
+    "• 05:00 Importación GEB 175,04 MW.",
+    "• 04:05 – 04:55 En Apiay fuera de línea AXG-901B de CCMSI.",
+    "• 04:05:30 Circuito P5-CDS: operación cortacircuito fase A, deslastre 0,8 MW. Diferida 5 bbl."
   ],
-  "riesgos": [
-    "Dependencia STN ~55% con TES-2 indisponible (menor holgura operativa).",
-    "TES-3 con intensidad de gas alta (cerca a 10 KPC/MWh neta).",
-    "Pendientes SCADA que limitan supervisión (TR40 Apiay, señales análogas TES3/TRs, variables CCMERS y medición CPO9)."
-  ],
-  "recomendaciones": [
-    "Mantener vigilancia operativa por dependencia STN elevada y gestionar retorno de TES-2.",
-    "Optimizar reparto de carga térmica para reducir intensidad (priorizar unidades más eficientes si es viable).",
-    "Analizar causa raíz del evento EBA-CDS (50-BG) y revisar tramo EBA-RC27 a R6 Cenit.",
-    "Cerrar brechas SCADA para mejorar observabilidad y tiempos de respuesta (priorizar TR40 Apiay y señales análogas)."
-  ],
+
   "raw": ""
 }
