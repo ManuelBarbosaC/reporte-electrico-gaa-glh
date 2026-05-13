@@ -61,5 +61,26 @@
     "Generación térmica promedio 53,67 MW calculada con MWh neta / 24 h.",
     "Producción total 195.320 bbl con diferida total de 237 bbl."
   ],
+  
+  "novedades_madrugada": [
+    "05:00 Termocoa genera 0 MW (indisponible).",
+    "05:00 Termosuria genera 54,62 MW (TES-1 30,67 MW + TES-3 23,95 MW).",
+    "05:00 Frontera GEB 230 kV importando 202,4 MW.",
+    "05:00 Frontera Cenit importando 57,02 MW.",
+    "Evento P5-CDS 50-BG con deslastre 2,6 MW de pozos en Apiay (diferida 1 bbl)."
+  ],
+  "riesgos": [
+    "Alta dependencia del STN (~62%) por indisponibilidad de TES-2 y Termocoa.",
+    "Eventos recurrentes en red de Apiay (P5-CDS) con causa no identificada.",
+    "Eficiencia térmica ajustada: intensidad gas ~9,4 KPC/MWh.",
+    "Exposición a eventos externos del STR EMSA sin respaldo térmico suficiente."
+  ],
+  "recomendaciones": [
+    "Priorizar acciones para reducción de dependencia STN mientras TES-2 permanece indisponible.",
+    "Analizar causa raíz del evento P5-CDS (50-BG) y definir acciones preventivas.",
+    "Optimizar despacho térmico manteniendo carga estable en TES-1 y TES-3.",
+    "Mantener seguimiento diario a intensidad de gas para evitar degradación de eficiencia."
+  ],
+
   "raw": ""
 }
