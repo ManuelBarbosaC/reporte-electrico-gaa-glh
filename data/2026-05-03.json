@@ -9,91 +9,76 @@
     "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
     "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1."
   ],
-  "kpis": {
-    "demanda_promedio_MW": 313.95,
-    "importacion_GEB_230kV_MW": 196.58,
-    "importacion_Cenit_MW": 44.88,
-    "dependencia_STN_pct": 62.62,
-
-    "generacion_total_MW": 94.46,
-    "Termosuria_total_MW": 76.51,
-
-    "produccion_total_bbl": 195544,
-    "diferida_total_bbl": 425,
-    "diferida_Castilla_pct": 0.24,
-    "diferida_Chichimene_pct": 0.28,
-    "diferida_Apiay_pct": 0.0,
-    "diferida_CPO9_pct": 0.09,
-
-    "gas_total_KPC": 12133.0,
-    "mwh_neta_total": 1283.1,
-    "intensidad_gas_KPC_por_MWh_neta": 9.46,
-
-    "delta_gas_vs_ayer_pct": -0.08,
-    "delta_intensidad_gas_vs_ayer_pct": 0.18,
-    "alerta_variacion_gas": "OK"
-  },
-  "consumo_gas_unidades": {
-    "Termocoa": { "KPC": 0.0, "MWh_neta": 0.0 },
-    "TES-1": { "KPC": 6633.0, "MWh_neta": 730.0 },
-    "TES-3": { "KPC": 5500.0, "MWh_neta": 553.2 }
-  },
-  "kpis_generacion": {
-    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-1": { "estado": "Operando", "potencia_MW": 53.46 },
-    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
-    "TES-3": { "estado": "Operando", "potencia_MW": 23.05 },
-
-    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 3.17 },
-    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 10.01 },
-
-    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.15 },
-    "APG_GGCH": { "estado": "Operando", "potencia_MW": 2.52 },
-    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.10 },
-    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
-  },
   "produccion_campos": {
     "Castilla": 94469,
     "Apiay": 10676,
     "Chichimene": 58381,
     "CPO9": 32018
   },
-  "eventos": [
-    "• 10:56 – 11:59 En Chichimene fuera de línea generador AXG-7490A de APG.",
-    "• 13:48 – 15:45 En Chichimene fuera de línea generador AXG-7490 A/C de APG.",
-    "• 16:51 – 17:16 En Chichimene fuera de línea generador AXG-7490C de APG.",
-    "• 21:04 – 23:31 En Castilla fuera de línea generadores G901 y G902 de COPOWER.",
-    "• 22:45 – 23:15 En Chichimene fuera de línea generador AXG-7490A de APG.",
-    "• 22:45 – 23:25 En Chichimene fuera de línea generador AXG-7490C de APG.",
-    "• 14:20:36 En Castilla, circuito P8-CMD disparo con recierre efectivo RC intermedio RC_B CL68 salida a CL21 por falla monofásica (50-AG). Deslastre 5,93 MW carga pozos y 3,83 MW carga EC3. Diferida 158 bbl (20 pozos productores).",
-    "• 23:31:43 En Chichimene, circuito LB3-CMTN disparo con recierre efectivo RC entrada CL33 por falla monofásica (50-AG). Deslastre 3,0 MW carga de pozos. Pendiente identificar causa. Diferida 43 bbl (13 pozos productores)."
-  ],
-  "diferida_detalle": {
-    "CASTILLA": { "Red_energia_falla": 158, "VSD_falla": 74, "VSD_mtto": 0, "Total": 231 },
-    "CHICHIMENE": { "Red_energia_falla": 43, "VSD_falla": 73, "VSD_mtto": 47, "Total": 163 },
-    "APIAY": { "Red_energia_falla": 0, "VSD_falla": 0, "VSD_mtto": 0, "Total": 0 },
-    "CPO9": { "Red_energia_falla": 0, "VSD_falla": 30, "VSD_mtto": 0, "Total": 30 }
+  "kpis": {
+    "demanda_promedio_MW": 313.95,
+    "importacion_GEB_230kV_MW": 196.58,
+    "importacion_Cenit_MW": 44.88,
+    "generacion_total_MW": 71.41,
+    "dependencia_STN_pct": 62.62,
+
+    "produccion_total_bbl": 195544,
+    "diferida_total_bbl": 425,
+
+    "gas_total_KPC": 12133.0,
+    "mwh_neta_total": 1283.1,
+    "intensidad_gas_KPC_por_MWh_neta": 9.46,
+    "termica_MW_promedio": 53.46,
+    "gas_KPC_por_MW_termico": 226.94,
+
+    "delta_gas_vs_ayer_pct": -0.08,
+    "delta_intensidad_gas_vs_ayer_pct": 0.18,
+    "alerta_variacion_gas": "OK"
   },
+  "consumo_gas_unidades": {
+    "Termocoa": {
+      "KPC": 0.0,
+      "MWh_neta": 0.0
+    },
+    "TES-1": {
+      "KPC": 6633.0,
+      "MWh_neta": 729.98
+    },
+    "TES-3": {
+      "KPC": 5500.0,
+      "MWh_neta": 553.16
+    }
+  },
+  "kpis_generacion": {
+    "TES-1": { "estado": "Operando", "potencia_MW": 30.42 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.05 },
+    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0 }
+  },
+  "resumen": [
+    "Demanda promedio 313,95 MW con dependencia STN ~62,62%.",
+    "Consumo de gas 12.133 KPC con intensidad promedio 9,46 KPC/MWh neta.",
+    "Generación térmica promedio 53,46 MW calculada con MWh neta / 24 h.",
+    "Producción total 195.544 bbl con diferida total de 425 bbl (eventos relevantes en Castilla y Chichimene)."
+  ],
   "novedades_madrugada": [
-    "• 05:00:00 Termocoa 0 MW (indisponible).",
-    "• 05:00:00 Termosuria 54,68 MW (TES-1 30,73 MW + TES-2 0 MW + TES-3 23,95 MW).",
-    "• 05:00:00 Apiay 1,14 MW.",
-    "• 05:00:00 PGG_EA1 1,40 MW.",
-    "• 05:00:00 APG_GGCH 2,94 MW.",
-    "• 05:00:00 Frontera GEB 230 kV importando 201,40 MW.",
-    "• 05:00:00 Frontera Cenit importando 57,13 MW.",
-    "• 05:00:00 Demanda San Fernando-Cenit 9,60 MW; Demanda EBA-Cenit 0,80 MW."
+    "05:00 Termocoa 0 MW (indisponible).",
+    "05:00 Termosuria 54,68 MW (TES-1 30,73 MW + TES-2 0 MW + TES-3 23,95 MW).",
+    "05:00 Apiay 1,14 MW; PGG_EA1 1,40 MW; APG_GGCH 2,94 MW.",
+    "05:00 Importación GEB 201,40 MW; Importación Cenit 57,13 MW.",
+    "05:00 Demanda San Fernando-Cenit 9,60 MW; EBA-Cenit 0,80 MW."
   ],
   "riesgos": [
-    "Dependencia del STN alta (~62,6%) con TES-2 y TEO indisponibles.",
-    "Intensidad gas alta (~9,46 KPC/MWh neta) y TES-3 con intensidad específica elevada (~9,94 KPC/MWh).",
-    "Eventos en red P8-CMD y LB3-CMTN con diferidas relevantes y causas pendientes por confirmar."
+    "Dependencia STN alta (>62%) con indisponibilidad TES-2 y TEO/Termocoa.",
+    "Eventos relevantes en redes de distribución (P8-CMD y LB3-CMTN) con deslastres y diferidas: riesgo de recurrencia si no se identifica causa.",
+    "Intensidad de gas alta (~9,46 KPC/MWh neta) que reduce margen de eficiencia.",
+    "Causas pendientes por confirmar en fallas monofásicas (50-AG)."
   ],
   "recomendaciones": [
-    "Priorizar análisis causa raíz y acciones preventivas por disparos P8-CMD y LB3-CMTN (50-AG); revisar aislamiento/cortacircuitos y fauna si aplica.",
-    "Mantener vigilancia por dependencia STN > 60% mientras TES-2 y TEO permanezcan indisponibles; priorizar retorno de capacidad térmica.",
-    "Seguimiento de eficiencia gas: TES-3 continúa con intensidad alta; ajustar reparto de carga térmica si es viable.",
-    "Continuar plan de cierre de pendientes SCADA (TR40 Apiay, señales análogas, medición CPO9) para mejorar supervisión."
+    "Priorizar análisis causa raíz de los eventos P8-CMD y LB3-CMTN (50-AG): inspección de cortacircuitos, aisladores y posibles factores de fauna/entorno.",
+    "Asegurar plan de mitigación/normalización de topologías tras eventos y maniobras, para reducir tiempos de recuperación de carga.",
+    "Mantener vigilancia por dependencia STN >60% mientras TES-2 y TEO permanezcan indisponibles.",
+    "Monitorear eficiencia de gas por unidad (TES-1/TES-3) y ajustar despacho para evitar operación ineficiente."
   ],
   "raw": ""
 }
