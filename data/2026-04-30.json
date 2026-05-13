@@ -59,6 +59,28 @@
   "eventos": [
     "• 01:36 – 07:08 En Castilla, fuera de línea generadores G901/2 de COPOWER.",
     "• 03:34 – 19:50 En Chichimene, fuera de línea generador AXG-7490B de APG.",
-      ],
+    "• 05:34:49 En el circuito P2-CDA dispara con recierre efectivo RC P2-RC05 por falla monofásica (50-AG), deslastra 2,23 MW carga de pozo. Causa: fauna (chulo). Diferida 12 bbl.",
+    "• 08:15 – 11:53 En Apiay traslado de carga EBA-Cenit a P2-CDA para aislamiento RC EBA-RC26 y R6 Cenit (cambio de aisladores).",
+    "• 08:40 – 16:17 En Castilla maniobra interna CL35–CL63 circuito AK1-CMA para facilidades de proyecto.",
+    "• 08:51 – 12:55 En Chichimene maniobras traslado de carga LB2 a LB3-CMTN para aislamiento barra A CL4 y barra B CL9 (mtto seccionadores/puntos calientes)."
+  ],
+  "novedades_madrugada": [
+    "• 05:00:00 Termocoa 0 MW (indisponible).",
+    "• 05:00:00 Termosuria 54,61 MW (TES-1 30,6 MW + TES-2 0 MW + TES-3 24,01 MW).",
+    "• 05:00:00 Frontera GEB 230 kV importando 201,7 MW.",
+    "• 04:04 – 05:07 En Chichimene fuera de línea generador AXG-7490C de APG.",
+    "• 04:38 – 05:25 En Chichimene fuera de línea generador AXG-7490B de APG."
+  ],
+  "riesgos": [
+    "Dependencia del STN muy alta (~62%) con indisponibilidades térmicas.",
+    "Intensidad de gas elevada (~9,55 KPC/MWh neta) y TES-3 cercana a 10 KPC/MWh.",
+    "Eventos por fauna en red (P2-CDA) con potencial de recurrencia si no se mitiga."
+  ],
+  "recomendaciones": [
+    "Priorizar recuperación de disponibilidad térmica (TES-2 y TEO/Termocoa) para reducir dependencia STN.",
+    "Optimizar operación para bajar intensidad de gas; revisar condición/operación de TES-3 (intensidad alta).",
+    "Implementar medidas anti-fauna en seccionadores/RC del circuito P2-CDA y revisar aislación asociada.",
+    "Mantener control de maniobras y aislamientos (Apiay/Chichimene/Castilla) con verificación de límites y trazabilidad."
+  ],
   "raw": ""
 }
