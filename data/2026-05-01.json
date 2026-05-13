@@ -1,0 +1,90 @@
+{
+  "fecha": "2026-05-01",
+  "titulo": "Reporte Electrico Diario - GAA/GLH",
+  "corte": "Reporte 2026-05-01 (fecha de reporte)",
+  "gerencias": ["GAA", "GLH"],
+  "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+  "consignas": [
+    "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
+    "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1."
+  ],
+  "kpis": {
+    "demanda_promedio_MW": 317.23,
+    "importacion_GEB_230kV_MW": 198.46,
+    "importacion_Cenit_MW": 46.83,
+    "dependencia_STN_pct": 62.56,
+
+    "generacion_total_MW": 93.91,
+    "Termosuria_total_MW": 76.55,
+
+    "produccion_total_bbl": 190751,
+    "diferida_total_bbl": 1977,
+    "diferida_Castilla_pct": 0.14,
+    "diferida_Chichimene_pct": 0.79,
+    "diferida_Apiay_pct": 0.13,
+    "diferida_CPO9_pct": 4.66,
+
+    "gas_total_KPC": 12125.0,
+    "mwh_neta_total": 1285.1,
+    "intensidad_gas_KPC_por_MWh_neta": 9.44,
+
+    "delta_gas_vs_ayer_pct": 0.49,
+    "delta_intensidad_gas_vs_ayer_pct": -1.17,
+    "alerta_variacion_gas": "OK"
+  },
+  "consumo_gas_unidades": {
+    "Termocoa": { "KPC": 0.0, "MWh_neta": 0.0 },
+    "TES-1": { "KPC": 6635.0, "MWh_neta": 733.1 },
+    "TES-3": { "KPC": 5490.0, "MWh_neta": 552.0 }
+  },
+  "kpis_generacion": {
+    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-1": { "estado": "Operando", "potencia_MW": 53.55 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.0 },
+
+    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 2.98 },
+    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 9.55 },
+
+    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.17 },
+    "APG_GGCH": { "estado": "Operando", "potencia_MW": 2.68 },
+    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 0.98 },
+    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
+  },
+  "produccion_campos": {
+    "Castilla": 94771,
+    "Apiay": 11082,
+    "Chichimene": 54799,
+    "CPO9": 30099
+  },
+  "eventos": [
+    "• 04:04 – 05:07 En Chichimene, fuera de línea generador AXG-7490C de APG.",
+    "• 04:38 – 05:25 En Chichimene, fuera de línea generador AXG-7490B de APG.",
+    "• 07:20 En Chichimene, fuera de línea generador AXG-7490B de APG.",
+    "• 14:03 – 15:15 En Chichimene, fuera de línea generador AXG-7490A de APG por falla en el circuito VQ1.",
+    "• 14:03 En Chichimene, fuera de línea generador AXG-7490C de APG por falla en el circuito VQ1.",
+    "• 14:03:10 En el circuito VQ1-CMVQ opera con recierre efectivo interruptor principal por falla monofásica (50-BG) (177 ms). Deslastre: Chichimene 5,6 MW; CPO9 3,7 MW. Causa: fauna (iguana) en transformador SDTH pozo CH51. Diferida: Chichimene 424 bbl y CPO9 1289 bbl."
+  ],
+  "novedades_madrugada": [
+    "• 05:00:00 Termocoa 0 MW (indisponible).",
+    "• 05:00:00 Termosuria 54,75 MW (TES-1 30,72 MW + TES-2 0 MW + TES-3 24,03 MW).",
+    "• 05:00:00 Apiay 1,14 MW.",
+    "• 05:00:00 APG_GGCH 1,44 MW.",
+    "• 05:00:00 Frontera GEB 230 kV importando 203,6 MW.",
+    "• 05:00:00 Frontera Cenit importando 57,24 MW.",
+    "• 05:00:00 Demanda San Fernando-Cenit 9,12 MW; Demanda EBA-Cenit 0,8 MW."
+  ],
+  "riesgos": [
+    "Dependencia del STN alta (~62,6%) con Termocoa/TEO y TES-2 indisponibles.",
+    "Evento mayor por fauna (iguana) en VQ1 con alta diferida (CPO9 4,66%).",
+    "Intensidad de gas alta (~9,44 KPC/MWh neta) y TES-3 cerca de 10 KPC/MWh."
+  ],
+  "recomendaciones": [
+    "Implementar acciones anti-fauna (protecciones físicas/aislamiento) en equipos asociados a VQ1 y trafo SDTH del pozo CH51.",
+    "Mantener vigilancia por alta dependencia STN; priorizar retorno de capacidad térmica (TES-2 y TEO/Termocoa) para recuperar holgura operativa.",
+    "Seguimiento de eficiencia de gas por unidad: TES-3 presenta intensidad alta; ajustar reparto de carga si es viable.",
+    "Consolidar plan de cierre de pendientes SCADA (TR40 Apiay, señales análogas, medición CPO9) para mejorar supervisión."
+  ],
+  "raw": ""
+}

@@ -1,0 +1,71 @@
+{
+  "fecha": "2026-05-02",
+  "titulo": "Reporte Electrico Diario - GAA/GLH",
+  "corte": "Reporte 2026-05-02 (fecha de reporte)",
+  "gerencias": ["GAA", "GLH"],
+  "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+  "consignas": [
+    "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
+    "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1."
+  ],
+  "kpis": {
+    "demanda_promedio_MW": 321.93,
+    "importacion_GEB_230kV_MW": 204.08,
+    "importacion_Cenit_MW": 52.63,
+    "dependencia_STN_pct": 63.39,
+
+    "generacion_total_MW": 87.3,
+    "Termosuria_total_MW": 76.79,
+
+    "produccion_total_bbl": 197650,
+    "diferida_total_bbl": 427,
+    "diferida_Castilla_pct": 0.23,
+    "diferida_Chichimene_pct": 0.14,
+    "diferida_Apiay_pct": 0.26,
+    "diferida_CPO9_pct": 0.31,
+
+    "gas_total_KPC": 12143.0,
+    "mwh_neta_total": 1286.5,
+    "intensidad_gas_KPC_por_MWh_neta": 9.44,
+
+    "delta_gas_vs_ayer_pct": 0.15,
+    "delta_intensidad_gas_vs_ayer_pct": 0.04,
+    "alerta_variacion_gas": "OK"
+  },
+  "consumo_gas_unidades": {
+    "Termocoa": { "KPC": 0.0, "MWh_neta": 0.0 },
+    "TES-1": { "KPC": 6623.0, "MWh_neta": 730.24 },
+    "TES-3": { "KPC": 5520.0, "MWh_neta": 556.29 }
+  },
+  "kpis_generacion": {
+    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-1": { "estado": "Operando", "potencia_MW": 53.61 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.18 },
+
+    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 1.52 },
+    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 4.93 },
+
+    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.15 },
+    "APG_GGCH": { "estado": "Operando", "potencia_MW": 1.85 },
+    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.06 },
+    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
+  },
+  "produccion_campos": {
+    "Castilla": 96849,
+    "Apiay": 10695,
+    "Chichimene": 58969,
+    "CPO9": 31137
+  },
+  "eventos": [
+    "• 17:35 – 18:26 En Chichimene en línea generador AXG-7490C de APG.",
+    "• 19:37 En Chichimene en línea generador AXG-7490C de APG.",
+    "• 21:55 – 22:28 En Chichimene en línea generador AXG-7490B de APG.",
+    "• 08:58 – 12:10 En Chichimene traslado de carga VQ1-CMV a CH3-CMTO para aislamiento de media barra CL8 y correctivo en cortacircuitos pozo CH51.",
+    "• 22:31:16 En circuito P3-CDS disparo con recierre efectivo RC P3-RC22 por falla monofásica (50-AG). Deslastre 0,55 MW carga de pozos. Causa no identificada. Diferida 1 bbl."
+  ],
+  "diferida_detalle": {
+    "CASTILLA": { "Transformador_SUT_falla": 0, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 218, "Total": 218 },
+    "CHICHIMENE": { "Transformador_SUT_falla": 85, "Red_energia_falla": 0, "Energia_tercero_mtto": 0, "VSD_falla": 0, "Total": 85 },
+    "APIAY": { "Transformador_SUT_falla": 0, "Red_energia_falla": 1, "Energia_tercero_mtto": 2,

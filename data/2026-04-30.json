@@ -1,0 +1,61 @@
+{
+  "fecha": "2026-04-30",
+  "titulo": "Reporte Electrico Diario - GAA/GLH",
+  "corte": "Reporte 2026-04-30 (fecha de reporte)",
+  "gerencias": ["GAA", "GLH"],
+  "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+  "consignas": [
+    "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
+    "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina, unidad de generación TEO continúa indisponible por traslado de turbina a TES-1."
+  ],
+  "kpis": {
+    "demanda_promedio_MW": 316.27,
+    "importacion_GEB_230kV_MW": 197.33,
+    "importacion_Cenit_MW": 42.5,
+    "dependencia_STN_pct": 62.39,
+
+    "generacion_total_MW": 98.04,
+    "Termosuria_total_MW": 75.25,
+
+    "produccion_total_bbl": 192623,
+    "diferida_total_bbl": 364,
+    "diferida_Apiay_pct": 0.34,
+    "diferida_CPO9_pct": 0.39,
+
+    "gas_total_KPC": 12066.0,
+    "mwh_neta_total": 1263.9,
+    "intensidad_gas_KPC_por_MWh_neta": 9.55,
+
+    "delta_gas_vs_ayer_pct": null,
+    "delta_intensidad_gas_vs_ayer_pct": null,
+    "alerta_variacion_gas": "SIN_BASE_COMPARACION"
+  },
+  "consumo_gas_unidades": {
+    "Termocoa": { "KPC": 0.0, "MWh_neta": 0.0 },
+    "TES-1": { "KPC": 6646.0, "MWh_neta": 721.8 },
+    "TES-3": { "KPC": 5420.0, "MWh_neta": 542.1 }
+  },
+  "kpis_generacion": {
+    "TEO_TERMOCOA": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-1": { "estado": "Operando", "potencia_MW": 52.66 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 22.59 },
+
+    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 3.99 },
+    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 13.34 },
+
+    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.17 },
+    "APG_GGCH": { "estado": "Operando", "potencia_MW": 3.54 },
+    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 0.75 },
+    "EC3_PWR4_GEN": { "estado": "Indisponible", "potencia_MW": 0.0 }
+  },
+  "produccion_campos": {
+    "Castilla": 90822,
+    "Apiay": 10765,
+    "Chichimene": 60398,
+    "CPO9": 30639
+  },
+  "eventos": [
+    "• 01:36 – 07:08 En Castilla, fuera de línea generadores G901/2 de COPOWER.",
+    "• 03:34 – 19:50 En Chichimene, fuera de línea generador AXG-7490B de APG.",
