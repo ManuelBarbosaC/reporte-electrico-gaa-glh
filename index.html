@@ -51,7 +51,7 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
   <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <div style="min-width:240px;flex:1">
       <div class="small">📅 Seleccionar fecha (HOY)</div>
-      <select id="fechaSelect" onchange="renderFromHist(this.value)"></select>
+      <select id="fechaSelect" onchange="renderDesdeFecha(this.value)"></select>
     </div>
     <div>
     </div>
@@ -166,7 +166,48 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
 
 <script>
 let HIST = {};
+function renderDesdeFecha(fechaHoy){
+  const hist = loadHist();
+  const fechas = Object.keys(hist).sort();
+  if(fechas.length === 0){
+    const est=document.getElementById('estado');
+    if(est) est.innerHTML = '<span class="error">❌ No hay histórico cargado.</span>';
+    return;
+  }
 
+  if(!hist[fechaHoy]) fechaHoy = fechas[fechas.length-1];
+  const idx = fechas.indexOf(fechaHoy);
+  const fechaAyer = (idx > 0) ? fechas[idx-1] : fechas[idx];
+
+  const hoy = hist[fechaHoy];
+  const ayer = hist[fechaAyer];
+
+  // Normalizar generación
+  flattenGenToKpis(hoy);
+  flattenGenToKpis(ayer);
+
+  // Cabecera
+  document.getElementById('fecha').innerText =
+    `Fecha HOY: ${hoy.fecha || '—'}  |  AYER: ${ayer.fecha || '—'}`;
+  document.getElementById('ultima').innerText =
+    'Última actualización: ' + new Date().toLocaleString('es-CO');
+
+  // Render completo
+  renderKpis(hoy,ayer);
+  renderProduccion(hoy,ayer);
+  renderConsignas(hoy);
+  renderResumen(hoy);
+  renderAlertas(hoy);
+  renderGenTotal(hoy,ayer);
+  renderComparativoGeneracion(hoy,ayer);
+  renderConsumoGas(hoy,ayer);
+  if(typeof renderConsumoGasPorUnidad === 'function'){
+    renderConsumoGasPorUnidad(hoy,ayer);
+  }
+
+  refreshMetricOptions();
+  renderGrafico();
+}
 function cargarTodo(){
   fetch('manifest.json',{cache:'no-store'})
     .then(r=>r.json())
@@ -198,7 +239,7 @@ window.addEventListener('DOMContentLoaded', cargarTodo);
 
 // Alias de compatibilidad (por versiones antiguas)
 function renderDesdeFecha(fecha){
-  return renderFromHist(fecha);
+  return renderDesdeFecha(fechas[fechas.length-1]);
 }
 
 
