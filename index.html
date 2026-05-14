@@ -47,6 +47,23 @@ select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);b
 .trend.bad{color:var(--bad)}
 .trend.warn{color:var(--warn)}
 .trend.neutral{color:var(--muted)}
+
+/* === Forzar que flecha + valor tengan el mismo color === */
+.trendWrap {
+  font-weight: 700;
+}
+
+.trendWrap.good {
+  color: var(--ok) !important;
+}
+
+.trendWrap.bad {
+  color: var(--bad) !important;
+}
+
+.trendWrap.neutral {
+  color: var(--muted) !important;
+}
 </style>
 </head>
 
@@ -832,6 +849,13 @@ function renderDesdeFecha(fechaHoy){
   try{ renderGrafico(); }catch(e){}
   cargarHistoricoWeb();
 })();
+
+function fmtTrend(p, kpi, invert=false, digits=1){
+  const t = trendIconByKPI(p, kpi, invert);
+  const val = Number.isFinite(p) ? p.toFixed(digits) + '%' : '—';
+  return `<span class="trend ${t.cls}">${t.sym}</span>${val}`;
+}
+
 </script>
 </body>
 </html>
