@@ -201,16 +201,27 @@ const KPI_THRESHOLDS = {
   default: 3
 };
 // invert=true: subir es malo (Importación GEB, Diferida)
+
 function trendIconByKPI(p, kpi, invert=false){
-  let cls='neutral', sym='●';
-  if(!Number.isFinite(p)) return {cls, sym};
-  const t = (KPI_THRESHOLDS[kpi]!==undefined) ? KPI_THRESHOLDS[kpi] : KPI_THRESHOLDS.default;
-  const pp = invert ? -p : p;
-  if(pp <= -t){ cls='bad'; sym='▼'; }
-  else if(pp >= t){ cls='good'; sym='▲'; }
-  else { cls='neutral'; sym='●'; }
+  if(!Number.isFinite(p)) return {cls:'neutral', sym:'●'};
+
+  const t = (KPI_THRESHOLDS[kpi]!==undefined)
+    ? KPI_THRESHOLDS[kpi]
+    : KPI_THRESHOLDS.default;
+
+  // dirección REAL (no se invierte nunca)
+  const dir = (p >= t) ? 1 : (p <= -t) ? -1 : 0;
+  const sym = dir === 1 ? '▲' : dir === -1 ? '▼' : '●';
+
+  // impacto (aquí sí aplica inversión)
+  if(dir === 0) return {cls:'neutral', sym};
+
+  const impact = invert ? -dir : dir;
+  const cls = impact > 0 ? 'good' : 'bad';
+
   return {cls, sym};
 }
+
 function fmtTrend(p, kpi, invert=false, digits=1){
   const t = trendIconByKPI(p, kpi, invert);
   const val = Number.isFinite(p) ? p.toFixed(digits) + '%' : '—';
@@ -382,9 +393,18 @@ function renderKpis(hoy,ayer){
     else if(k==='importacion_GEB_230kV_MW'){ kpiType='stn'; invert=true; }  // ✅ malo si sube
     else if(k==='demanda_promedio_MW'){ kpiType='stn'; invert=false; }
 
-    let c='ok';
-    if(d<0) c='bad';
-    else if(d>0) c='ok';
+
+let c='ok';
+if(kpiType === 'diferida' || kpiType === 'stn'){
+  // KPIs invertidos: subir es malo
+  if(d > 0) c='bad';
+  else if(d < 0) c='ok';
+} else {
+  // KPIs normales
+  if(d < 0) c='bad';
+  else if(d > 0) c='ok';
+}
+
 
     const div=document.createElement('div');
     div.className='k';
