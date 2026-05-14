@@ -36,53 +36,47 @@
     "alerta_variacion_gas": "OK"
   },
   "consumo_gas_unidades": {
-    "Termocoa": {
-      "KPC": 7968.7,
-      "MWh_neta": 966.8
-    },
-    "TES-1": {
-      "KPC": 7588.0,
-      "MWh_neta": 849.9
-    },
-    "TES-3": {
-      "KPC": 5500.0,
-      "MWh_neta": 556.7
-    }
+    "Termocoa": { "KPC": 7968.7, "MWh_neta": 966.8 },
+    "TES-1": { "KPC": 7588.0, "MWh_neta": 849.9 },
+    "TES-3": { "KPC": 5500.0, "MWh_neta": 556.7 }
   },
   "kpis_generacion": {
     "TES-1": { "estado": "Operando", "potencia_MW": 35.41 },
     "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
     "TES-3": { "estado": "Operando", "potencia_MW": 23.20 },
-    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 40.28 }
+    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 40.28 },
+
+    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 2.34 },
+    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 7.20 },
+
+    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.05 },
+    "APG_GGCH": { "estado": "Sin generación", "potencia_MW": 0.00 },
+    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.20 }
   },
   "resumen": [
     "Demanda promedio 313,62 MW con dependencia STN ~55,47%.",
     "Consumo de gas 21.056,7 KPC con intensidad promedio 8,87 KPC/MWh neta.",
-    "Generación térmica promedio 98,90 MW calculada con MWh neta / 24 h.",
-    "Producción total 189.462 bbl con diferida total de 411 bbl (principal impacto en Castilla por eventos en red)."
+    "Generación térmica promedio 98,90 MW; aporte solar total 9,54 MW.",
+    "Producción total 189.462 bbl con diferida total de 411 bbl."
   ],
   "novedades_madrugada": [
     "05:00 Termocoa 40,11 MW.",
-    "05:00 Termosuria 59,85 MW (TES-1 35,89 MW + TES-2 0 MW + TES-3 23,96 MW).",
+    "05:00 Termosuria 59,85 MW (TES-1 35,89 MW + TES-3 23,96 MW).",
     "05:00 Apiay 1,17 MW; PGG_EA1 1,68 MW; APG_GGCH 0 MW.",
     "05:00 Importación GEB 173,55 MW; Importación Cenit 38,12 MW.",
-    "05:00 Demanda San Fernando-Cenit 9,61 MW; EBA-Cenit 0,11 MW.",
-    "01:26–01:45 Apiay fuera de línea AXG-901B (CCMSI).",
-    "01:26:06 Circuito P1-CDA: recierre efectivo (50-ABG), deslastre 8 MW y salida AXG-901B. Diferida 56 bbl."
+    "01:26 Circuito P1-CDA falla 50-ABG con deslastre 8 MW y salida AXG-901B."
   ],
   "riesgos": [
-    "TES-2 indisponible mantiene alta dependencia del STN (~55%).",
-    "Eventos por fauna en red (P1-CDA, tingua azul) y desprendimiento de bajante (SS11) aumentan recurrencia de fallas.",
-    "Disparo P8-CMD (50-BG) con deslastre 7,4 MW: causa no identificada, riesgo de repetición.",
-    "Salidas repetitivas de AXG-901B y AXG-191C afectan estabilidad de generación distribuida en Apiay.",
-    "Pendientes SCADA reducen observabilidad (TR40 Apiay, señales análogas, medición CPO9)."
+    "TES-2 indisponible mantiene dependencia del STN >55%.",
+    "Eventos por fauna y fallas monofásicas recurrentes en Apiay (P1-CDA, P8-CMD).",
+    "Salida repetitiva de AXG-901B y AXG-191C afecta estabilidad de generación distribuida.",
+    "Pendientes SCADA continúan limitando observabilidad operativa."
   ],
   "recomendaciones": [
-    "Aplicar medidas anti-fauna (barreras/aislamiento) en puntos reincidentes: P1-CDA, bujes y estructuras críticas.",
-    "Cerrar investigación del disparo P8-CMD (50-BG) y ejecutar inspección de aislamiento/tramo para prevenir recurrencia.",
-    "Asegurar reparación/aseguramiento mecánico de bajantes en SS11 y revisión preventiva en circuitos similares.",
-    "Revisar causas de detonaciones en AXG-191C (ERA) y confiabilidad de AXG-901B (CCMSI) por múltiples salidas.",
-    "Mantener vigilancia operativa por dependencia STN y priorizar gestión de retorno TES-2."
+    "Mantener control y mitigación anti-fauna en circuitos P1-CDA y P8-CMD.",
+    "Priorizar cierre de causas raíz en salidas AXG-901B y AXG-191C.",
+    "Aprovechar aporte solar (≈9,5 MW) para reducir despacho térmico en horas diurnas.",
+    "Seguir gestión prioritaria para retorno de TES-2 y reducción estructural de dependencia STN."
   ],
   "raw": ""
 }
