@@ -19,7 +19,6 @@
     "demanda_promedio_MW": 314.58,
     "importacion_GEB_230kV_MW": 151.33,
     "importacion_Cenit_MW": 42.50,
-
     "generacion_total_MW": 119.69,
     "dependencia_STN_pct": 48.11,
 
@@ -30,7 +29,7 @@
     "mwh_neta_total": 2366.7,
     "intensidad_gas_KPC_por_MWh_neta": 6.53,
     "termica_MW_promedio": 98.61,
-    "gas_KPC_por_MW_termico": 156.81,
+    "gas_KPC_por_MW_termico": 156.82,
 
     "delta_gas_vs_ayer_pct": 4.63,
     "delta_intensidad_gas_vs_ayer_pct": -30.07,
@@ -43,24 +42,49 @@
     },
     "TES-1": {
       "KPC": 8034.0,
-      "MWh_neta": 906.2
+      "MWh_neta": 906.24
     },
     "TES-3": {
       "KPC": 5430.0,
-      "MWh_neta": 546.2
+      "MWh_neta": 546.16
     }
   },
   "kpis_generacion": {
     "TES-1": { "estado": "Operando", "potencia_MW": 37.76 },
     "TES-2": { "estado": "Indisponible", "potencia_MW": 0 },
     "TES-3": { "estado": "Operando", "potencia_MW": 22.76 },
-    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 38.10 }
+    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 38.10 },
+
+    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 4.02 },
+    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 13.65 },
+
+    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 1.17 },
+    "APG_GGCH": { "estado": "Operando", "potencia_MW": 1.00 },
+    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.23 }
   },
   "resumen": [
     "Demanda promedio 314,58 MW con dependencia STN ~48,11%.",
     "Consumo de gas 15.464 KPC con intensidad promedio 6,53 KPC/MWh neta.",
-    "Generación térmica promedio 98,61 MW calculada con MWh neta / 24 h.",
-    "Producción total 185.759 bbl con diferida total de 1.624 bbl (principal impacto en CPO9)."
+    "Generación térmica promedio 98,61 MW y aporte solar promedio 17,67 MW.",
+    "Producción total 185.759 bbl con diferida total de 1.624 bbl (impacto mayor en CPO9)."
+  ],
+  "novedades_madrugada": [
+    "05:00 Termocoa 39,68 MW.",
+    "05:00 Termosuria 62,68 MW (TES-1 38,72 MW + TES-2 0 MW + TES-3 23,96 MW).",
+    "05:00 Apiay 1,16 MW; PGG_EA1 1,77 MW; APG_GGCH 0 MW.",
+    "05:00 Importación GEB 155,8 MW; Importación Cenit 57,07 MW."
+  ],
+  "riesgos": [
+    "TES-2 indisponible mantiene dependencia estructural del STN.",
+    "Alta diferida en CPO9 (4,63%) asociada a fallas en VSD.",
+    "Eventos recurrentes en Chichimene (AXG-7490B) afectan estabilidad de generación APG.",
+    "Dependencia del despacho térmico pese a buen aporte solar."
+  ],
+  "recomendaciones": [
+    "Priorizar atención a VSD en CPO9 para reducir diferidas.",
+    "Aprovechar ventana de alta generación solar para aliviar despacho térmico.",
+    "Seguimiento a confiabilidad de generadores APG en Chichimene.",
+    "Mantener control operativo mientras TES-2 continúe indisponible."
   ],
   "raw": ""
 }
