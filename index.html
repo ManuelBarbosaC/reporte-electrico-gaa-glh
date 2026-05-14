@@ -178,33 +178,25 @@ function fmtNum(x){
 }
 
 // ===== Tendencias (flecha = sentido real, color = impacto) =====
-const KPI_THRESHOLDS = {
-  produccion: 1,
-  diferida: 1,
-  stn: 2,
-  generacion: 2,
-  gas: 3,
-  intensidad: 3,
-  default: 3
-};
+var KPI_THRESHOLDS = {produccion:1,diferida:1,stn:2,generacion:2,gas:3,intensidad:3,default:3};
 
-function arrowBySign(p, t){
-  if(!Number.isFinite(p)) return {sym:'●', dir:0};
-  if(p >= t) return {sym:'▲', dir: 1};
-  if(p <= -t) return {sym:'▼', dir:-1};
-  return {sym:'●', dir:0};
+function trendImpact(p, kpi, invertImpact){
+  if(invertImpact===undefined) invertImpact=false;
+  var t = (KPI_THRESHOLDS.hasOwnProperty(kpi)) ? KPI_THRESHOLDS[kpi] : KPI_THRESHOLDS.default;
+  if(!Number.isFinite(p)) return {sym:'●', cls:'neutral'};
+  var dir = (p>=t)?1:(p<=-t?-1:0);
+  var sym = dir===1?'▲':(dir===-1?'▼':'●');
+  if(dir===0) return {sym:sym, cls:'neutral'};
+  var impact = invertImpact ? -dir : dir;
+  var cls = (impact>0)?'good':'bad';
+  return {sym:sym, cls:cls};
 }
 
-// invertImpact=true => subir es malo (diferida, importación)
-function trendByKPI(p, kpi, invertImpact=false){
-  const t = (KPI_THRESHOLDS[kpi]!==undefined) ? KPI_THRESHOLDS[kpi] : KPI_THRESHOLDS.default;
-  const a = arrowBySign(p, t);
-  let cls = 'neutral';
-  if(a.dir !== 0){
-    const impact = invertImpact ? -a.dir : a.dir;
-    cls = (impact > 0) ? 'good' : 'bad';
-  }
-  return {cls, sym:a.sym};
+function fmtTrendWrap(p, kpi, invertImpact, digits){
+  if(digits===undefined) digits=1;
+  var tr = trendImpact(p,kpi,invertImpact);
+  var val = Number.isFinite(p) ? p.toFixed(digits)+'%' : '—';
+  return '<span class="trendWrap '+tr.cls+'"><span class="trend">'+tr.sym+'</span>'+val+'</span>';
 }
 
 
@@ -432,60 +424,52 @@ function procesar(){
 }
 
 function renderKpis(hoy,ayer){
-  const kpis=[
+  var kpis=[
     ['demanda_promedio_MW','Demanda promedio (MW)','stn',false],
     ['importacion_GEB_230kV_MW','Importación GEB 230 kV (MW)','stn',true],
     ['produccion_total_bbl','Producción total (bbl)','produccion',false],
     ['diferida_total_bbl','Diferida total (bbl)','diferida',true]
   ];
-  const kBox=document.getElementById('kpis'); kBox.innerHTML='';
-  kpis.forEach(([k,l,kpiType,invertImpact])=>{
-    const h=Number(hoy.kpis[k]);
-    const a=Number(ayer.kpis[k]);
+  var kBox=document.getElementById('kpis'); kBox.innerHTML='';
+  kpis.forEach(function(it){
+    var k=it[0], l=it[1], kpiType=it[2], invertImpact=it[3];
+    var h=Number(hoy.kpis[k]);
+    var a=Number(ayer.kpis[k]);
     if(Number.isNaN(h)||Number.isNaN(a)) return;
-    const d=h-a;
-    const pct = (a!==0) ? (d/a)*100 : NaN;
-
-    // Color principal del valor (mantiene estilo original)
-    let c='ok';
-    if(d<0) c='bad';
-
-    const tr = trendByKPI(pct, kpiType, invertImpact);
-
-    const div=document.createElement('div'); div.className='k';
-    div.innerHTML=`<div class="t">${l}</div>
-      <div class="v ${c}">${fmtNum(h)}
-        <span class="small"><span class="trendWrap ${tr.cls}"><span class="trend">${tr.sym}</span>${Number.isFinite(pct)?pct.toFixed(1)+'%':'—'} (Δ ${fmtNum(d)})</span></span>
-      </div>
-      <div class="small">Ayer: ${fmtNum(a)}</div>`;
+    var d=h-a;
+    var pct = (a!==0)?(d/a)*100:NaN;
+    var c='ok'; if(d<0) c='bad';
+    var div=document.createElement('div'); div.className='k';
+    div.innerHTML = '<div class="t">'+l+'</div>'+
+      '<div class="v '+c+'">'+fmtNum(h)+' <span class="small">'+fmtTrendWrap(pct,kpiType,invertImpact,1)+' (Δ '+fmtNum(d)+')</span></div>'+
+      '<div class="small">Ayer: '+fmtNum(a)+'</div>';
     kBox.appendChild(div);
   });
 }
 
+
 function renderGenTotal(hoy,ayer){
-  const box=document.getElementById('genTotal');
+  var box=document.getElementById('genTotal');
   box.innerHTML='';
-  const h = Number(hoy.kpis && hoy.kpis.generacion_total_MW !== undefined ? hoy.kpis.generacion_total_MW : calcTotalGen(hoy));
-  const a = Number(ayer.kpis && ayer.kpis.generacion_total_MW !== undefined ? ayer.kpis.generacion_total_MW : calcTotalGen(ayer));
-  const d = h - a;
-  const pct = (a!==0) ? (d/a)*100 : NaN;
-  const tr = trendByKPI(pct, 'generacion', false);
-
-  let cls='ok';
-  if(d<0) cls='bad';
-
-  const div=document.createElement('div');
-  div.className='k';
-  div.innerHTML = `<div class="t">Generación total (MW)</div>
-    <div class="v ${cls}">${fmtNum(h)} MW <span class="small"><span class="trendWrap ${tr.cls}"><span class="trend">${tr.sym}</span>Δ ${fmtNum(d)} MW (${Number.isFinite(pct)?pct.toFixed(1)+'%':'—'})</span></span></div>
-    <div class="small">Ayer: ${fmtNum(a)} MW</div>`;
+  var h = Number(hoy.kpis && hoy.kpis.generacion_total_MW !== undefined ? hoy.kpis.generacion_total_MW : calcTotalGen(hoy));
+  var a = Number(ayer.kpis && ayer.kpis.generacion_total_MW !== undefined ? ayer.kpis.generacion_total_MW : calcTotalGen(ayer));
+  var d = h - a;
+  var pct = (a!==0)?(d/a)*100:NaN;
+  var tr = trendImpact(pct,'generacion',false);
+  var cls = (d<0)?'bad':'ok';
+  var div=document.createElement('div'); div.className='k';
+  div.innerHTML = '<div class="t">Generación total (MW)</div>'+
+    '<div class="v '+cls+'">'+fmtNum(h)+' MW <span class="small"><span class="trendWrap '+tr.cls+'"><span class="trend">'+tr.sym+'</span>Δ '+fmtNum(d)+' MW ('+(Number.isFinite(pct)?pct.toFixed(1)+'%':'—')+')</span></span></div>'+
+    '<div class="small">Ayer: '+fmtNum(a)+' MW</div>';
   box.appendChild(div);
 
-  const div2=document.createElement('div');
-  div2.className='k';
-  div2.innerHTML = `<div class="t">Importación GEB 230 kV (MW)</div><div class="v">${fmtNum(hoy.kpis.importacion_GEB_230kV_MW)} MW</div><div class="small">(para comparar con el gráfico doble)</div>`;
+  var div2=document.createElement('div'); div2.className='k';
+  div2.innerHTML = '<div class="t">Importación GEB 230 kV (MW)</div>'+
+    '<div class="v">'+fmtNum(hoy.kpis.importacion_GEB_230kV_MW)+' MW</div>'+
+    '<div class="small">(para comparar con el gráfico doble)</div>';
   box.appendChild(div2);
 }
+
 
 function renderComparativoGeneracion(hoy,ayer){
   const box=document.getElementById('genComparativo');
@@ -516,7 +500,7 @@ function renderComparativoGeneracion(hoy,ayer){
     const div=document.createElement('div');
     div.className='k';
     div.innerHTML = `<div class="t">${u}</div>
-      <div class="v ${cls}">${fmtNum(hMW)} MW <span class="small">(<span class="trendWrap ${sym==='▲'?'good':sym==='▼'?'bad':'neutral'}"><span class="trend">${sym}</span>${fmtNum(d)} MW</span>)</span></div>
+      <div class="v ${cls}">${fmtNum(hMW)} MW <span class="small">(${sym} ${fmtNum(d)} MW)</span></div>
       <div class="small">Ayer: ${fmtNum(aMW)} MW | Δ%: ${pct.toFixed(2)}%</div>
       <div class="small ${cambioEstado?'warn':''}">Estado HOY: ${hEst} | AYER: ${aEst}</div>`;
     box.appendChild(div);
@@ -524,34 +508,33 @@ function renderComparativoGeneracion(hoy,ayer){
 }
 
 function renderProduccion(hoy,ayer){
-  const pBox=document.getElementById('prodComparativo'); pBox.innerHTML='';
-  const H=hoy.produccion_campos||{}; const A=ayer.produccion_campos||{};
-  const get=(o,k)=>Number(o[k]||0);
-  const totH={Castilla:get(H,'Castilla'),Apiay:get(H,'Apiay'),Chichimene:get(H,'Chichimene'),CPO9:get(H,'CPO9')};
-  const totA={Castilla:get(A,'Castilla'),Apiay:get(A,'Apiay'),Chichimene:get(A,'Chichimene'),CPO9:get(A,'CPO9')};
+  var pBox=document.getElementById('prodComparativo'); pBox.innerHTML='';
+  var H=hoy.produccion_campos||{}; var A=ayer.produccion_campos||{};
+  var get=function(o,k){return Number(o[k]||0);};
+  var totH={Castilla:get(H,'Castilla'),Apiay:get(H,'Apiay'),Chichimene:get(H,'Chichimene'),CPO9:get(H,'CPO9')};
+  var totA={Castilla:get(A,'Castilla'),Apiay:get(A,'Apiay'),Chichimene:get(A,'Chichimene'),CPO9:get(A,'CPO9')};
   totH['Total GAA']=totH.Castilla+totH.Apiay; totA['Total GAA']=totA.Castilla+totA.Apiay;
   totH['Total GLH']=totH.Chichimene+totH.CPO9; totA['Total GLH']=totA.Chichimene+totA.CPO9;
   totH['Total Sistema']=totH['Total GAA']+totH['Total GLH']; totA['Total Sistema']=totA['Total GAA']+totA['Total GLH'];
 
-  ['Castilla','Apiay','Total GAA','Chichimene','CPO9','Total GLH','Total Sistema'].forEach(campo=>{
-    const h=totH[campo]||0,a=totA[campo]||0,d=h-a; 
-    const p=a?((d/a)*100):NaN;
+  ['Castilla','Apiay','Total GAA','Chichimene','CPO9','Total GLH','Total Sistema'].forEach(function(campo){
+    var h=totH[campo]||0; var a=totA[campo]||0; var d=h-a;
+    var p=a?((d/a)*100):NaN;
+    var cls='ok';
+    if(Number.isFinite(p) && p<=-3){cls='bad';}
+    else if(Number.isFinite(p) && p<-1){cls='warn';}
 
-    // Severidad original
-    let cls='ok';
-    if(Number.isFinite(p) && p<=-3) cls='bad';
-    else if(Number.isFinite(p) && p<-1) cls='warn';
+    var tr = trendImpact(p,'produccion',false);
 
-    const tr = trendByKPI(p, 'produccion', false);
-
-    const div=document.createElement('div'); div.className='k';
-    if(campo.includes('Total')) div.style.background='rgba(255,255,255,.05)';
-    div.innerHTML=`<div class="t">${campo}</div>
-      <div class="v ${cls}">${fmtNum(h)} <span class="small">bbl</span></div>
-      <div class="small ${cls}"><span class="trendWrap ${tr.cls}"><span class="trend">${tr.sym}</span>Δ ${fmtNum(d)} (${Number.isFinite(p)?p.toFixed(2)+'%':'—'})</span></div>`;
+    var div=document.createElement('div'); div.className='k';
+    if(String(campo).indexOf('Total')!==-1) div.style.background='rgba(255,255,255,.05)';
+    div.innerHTML = '<div class="t">'+campo+'</div>'+
+      '<div class="v '+cls+'">'+fmtNum(h)+' <span class="small">bbl</span></div>'+
+      '<div class="small '+cls+'"><span class="trendWrap '+tr.cls+'"><span class="trend">'+tr.sym+'</span>Δ '+fmtNum(d)+' ('+(Number.isFinite(p)?p.toFixed(2)+'%':'—')+')</span></div>';
     pBox.appendChild(div);
   });
 }
+
 
 function renderConsignas(hoy){
   const ulC=document.getElementById('consignas'); ulC.innerHTML='';
@@ -870,34 +853,33 @@ function renderAlertas(hoy){
 }
 
 function renderProduccion(hoy,ayer){
-  const pBox=document.getElementById('prodComparativo'); pBox.innerHTML='';
-  const H=hoy.produccion_campos||{}; const A=ayer.produccion_campos||{};
-  const get=(o,k)=>Number(o[k]||0);
-  const totH={Castilla:get(H,'Castilla'),Apiay:get(H,'Apiay'),Chichimene:get(H,'Chichimene'),CPO9:get(H,'CPO9')};
-  const totA={Castilla:get(A,'Castilla'),Apiay:get(A,'Apiay'),Chichimene:get(A,'Chichimene'),CPO9:get(A,'CPO9')};
+  var pBox=document.getElementById('prodComparativo'); pBox.innerHTML='';
+  var H=hoy.produccion_campos||{}; var A=ayer.produccion_campos||{};
+  var get=function(o,k){return Number(o[k]||0);};
+  var totH={Castilla:get(H,'Castilla'),Apiay:get(H,'Apiay'),Chichimene:get(H,'Chichimene'),CPO9:get(H,'CPO9')};
+  var totA={Castilla:get(A,'Castilla'),Apiay:get(A,'Apiay'),Chichimene:get(A,'Chichimene'),CPO9:get(A,'CPO9')};
   totH['Total GAA']=totH.Castilla+totH.Apiay; totA['Total GAA']=totA.Castilla+totA.Apiay;
   totH['Total GLH']=totH.Chichimene+totH.CPO9; totA['Total GLH']=totA.Chichimene+totA.CPO9;
   totH['Total Sistema']=totH['Total GAA']+totH['Total GLH']; totA['Total Sistema']=totA['Total GAA']+totA['Total GLH'];
 
-  ['Castilla','Apiay','Total GAA','Chichimene','CPO9','Total GLH','Total Sistema'].forEach(campo=>{
-    const h=totH[campo]||0,a=totA[campo]||0,d=h-a; 
-    const p=a?((d/a)*100):NaN;
+  ['Castilla','Apiay','Total GAA','Chichimene','CPO9','Total GLH','Total Sistema'].forEach(function(campo){
+    var h=totH[campo]||0; var a=totA[campo]||0; var d=h-a;
+    var p=a?((d/a)*100):NaN;
+    var cls='ok';
+    if(Number.isFinite(p) && p<=-3){cls='bad';}
+    else if(Number.isFinite(p) && p<-1){cls='warn';}
 
-    // Severidad original
-    let cls='ok';
-    if(Number.isFinite(p) && p<=-3) cls='bad';
-    else if(Number.isFinite(p) && p<-1) cls='warn';
+    var tr = trendImpact(p,'produccion',false);
 
-    const tr = trendByKPI(p, 'produccion', false);
-
-    const div=document.createElement('div'); div.className='k';
-    if(campo.includes('Total')) div.style.background='rgba(255,255,255,.05)';
-    div.innerHTML=`<div class="t">${campo}</div>
-      <div class="v ${cls}">${fmtNum(h)} <span class="small">bbl</span></div>
-      <div class="small ${cls}"><span class="trendWrap ${tr.cls}"><span class="trend">${tr.sym}</span>Δ ${fmtNum(d)} (${Number.isFinite(p)?p.toFixed(2)+'%':'—'})</span></div>`;
+    var div=document.createElement('div'); div.className='k';
+    if(String(campo).indexOf('Total')!==-1) div.style.background='rgba(255,255,255,.05)';
+    div.innerHTML = '<div class="t">'+campo+'</div>'+
+      '<div class="v '+cls+'">'+fmtNum(h)+' <span class="small">bbl</span></div>'+
+      '<div class="small '+cls+'"><span class="trendWrap '+tr.cls+'"><span class="trend">'+tr.sym+'</span>Δ '+fmtNum(d)+' ('+(Number.isFinite(p)?p.toFixed(2)+'%':'—')+')</span></div>';
     pBox.appendChild(div);
   });
 }
+
 
 function cargarEjemplo(){
   const ayer={
