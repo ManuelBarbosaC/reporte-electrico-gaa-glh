@@ -1,99 +1,97 @@
 {
-  "reporte": {
-    "tipo": "REPORTE_ELECTRICO_DIARIO",
-    "fecha": "2026-05-14",
-    "zona": "Castilla - Apiay - Chichimene - CPO9",
-    "estado_general": "ALERTA"
-  },
-  "consignas_15_05": {
-    "stn": "Sin consignaciones GEB Meta",
-    "str_emsa": "Sin consignaciones. Frontera Suria indisponible",
-    "sispot": "TES-2 indisponible por cambio de turbina"
-  },
-  "generacion_promedio_mw": {
-    "termocoa": 39.89,
-    "tes1": 35.06,
-    "tes2": 0.0,
-    "tes3": 23.19,
-    "psfv_castilla": 2.89,
-    "psfv_san_fernando": 9.19,
-    "apiay": 0.81,
-    "copower_ea1": 1.23
-  },
-  "energia_diaria_mwh": {
-    "tes1": 841.51,
-    "tes3": 556.50,
-    "termocoa": 957.40,
-    "total_demanda": 7455.78
-  },
-  "tes1_verificacion": {
-    "potencia_promedio_mw": 35.06,
-    "potencia_snapshot_15_05_05_00_mw": 35.92,
-    "estado": "OK",
-    "criterio": "Consistencia energía diaria / potencia promedio"
-  },
-  "importaciones_mw": {
-    "geb_230kv": 172.54,
-    "cenit": 27.25,
-    "suria": 0.0
-  },
-  "eventos_electricos": [
-    {
-      "hora": "01:26",
-      "activo": "Circuito P1-CDA",
-      "causa": "Falla bifásica a tierra",
-      "impacto_mw": 8.0,
-      "diferida_bbl": 56
-    },
-    {
-      "hora": "07:59",
-      "activo": "Circuito P5-CDC",
-      "causa": "Fauna en CL104",
-      "impacto_mw": 7.1,
-      "diferida_bbl": 137
-    }
+  "fecha": "2026-05-15",
+  "titulo": "Reporte Electrico Diario - GAA/GLH",
+  "corte": "Reporte 2026-05-15 (fecha de reporte)",
+  "gerencias": ["GAA", "GLH"],
+  "zonas": ["Castilla", "Apiay", "Chichimene", "CPO9"],
+  "consignas": [
+    "• En el STN asociado a la GEB Meta no se tienen consignaciones programadas.",
+    "• En el STR-EMSA no se tienen consignaciones programadas. Continúa indisponible frontera Suria-EMSA.",
+    "• En el SISPOT unidad de generación TES-2 continúa indisponible por cambio de turbina."
   ],
-  "diferida_bbl": {
-    "castilla": 199,
-    "apiay": 63,
-    "total": 263,
-    "porcentaje_produccion": 0.14
+  "produccion_campos": {
+    "Castilla": 93330,
+    "Apiay": 10825,
+    "Chichimene": 56191,
+    "CPO9": 30851
   },
-  "consumo_gas": {
-    "termocoa_mcf": 7897.3,
-    "tes1_mcf": 7438.0,
-    "tes3_mcf": 5440.0,
-    "total_mcf": 20775.3
+  "kpis": {
+    "demanda_promedio_MW": 313.20,
+    "importacion_GEB_230kV_MW": 172.54,
+    "importacion_Cenit_MW": 27.25,
+    "generacion_total_MW": 112.26,
+    "dependencia_STN_pct": 55.09,
+
+    "produccion_total_bbl": 191196,
+    "diferida_total_bbl": 263,
+
+    "gas_total_KPC": 20775.3,
+    "mwh_neta_total": 2355.4,
+    "intensidad_gas_KPC_por_MWh_neta": 8.82,
+    "termica_MW_promedio": 98.14,
+    "gas_KPC_por_MW_termico": 211.69,
+
+    "delta_gas_vs_ayer_pct": null,
+    "delta_intensidad_gas_vs_ayer_pct": null,
+    "alerta_variacion_gas": "SIN_DATO"
   },
-  "eficiencia_gas_mcf_mwh": {
-    "termocoa": 8.25,
-    "tes1": 8.84,
-    "tes3": 9.78
-  },
-  "produccion_bbl": {
-    "gaa": 104154,
-    "glh": 87042,
-    "total": 191196
-  },
-  "alertas": [
-    {
-      "nivel": "ROJA",
-      "descripcion": "TES-2 indisponible y frontera Suria fuera de servicio"
+  "consumo_gas_unidades": {
+    "Termocoa": {
+      "KPC": 7897.3,
+      "MWh_neta": 957.4
     },
-    {
-      "nivel": "AMARILLA",
-      "descripcion": "Eventos de red con deslastres >7 MW y diferida significativa"
+    "TES-1": {
+      "KPC": 7438.0,
+      "MWh_neta": 841.5
     },
-    {
-      "nivel": "AMARILLA",
-      "descripcion": "TES-3 con consumo específico de gas elevado"
+    "TES-3": {
+      "KPC": 5440.0,
+      "MWh_neta": 556.5
     }
+  },
+  "kpis_generacion": {
+    "TES-1": { "estado": "Operando", "potencia_MW": 35.06 },
+    "TES-2": { "estado": "Indisponible", "potencia_MW": 0.0 },
+    "TES-3": { "estado": "Operando", "potencia_MW": 23.19 },
+    "TEO_TERMOCOA": { "estado": "Operando", "potencia_MW": 39.89 },
+
+    "PSFV_CASTILLA": { "estado": "Operando", "potencia_MW": 2.89 },
+    "PSFV_SAN_FERNANDO": { "estado": "Operando", "potencia_MW": 9.19 },
+
+    "GENERACION_APIAY": { "estado": "Operando", "potencia_MW": 0.81 },
+    "APG_GGCH": { "estado": "Sin generación", "potencia_MW": 0.0 },
+    "PGGEA1_COPOWER": { "estado": "Operando", "potencia_MW": 1.23 }
+  },
+  "resumen": [
+    "Demanda promedio 313.20 MW con dependencia STN (GEB 230 kV) ~55.09%.",
+    "Consumo de gas 20,775.3 KPC con intensidad promedio 8.82 KPC/MWh neta (MWh neta total 2,355.4).",
+    "Generación térmica promedio 98.14 MW (Termocoa + Termosuria) y aporte solar promedio 12.08 MW (PSFV Castilla + San Fernando).",
+    "Producción total 191,196 bbl con diferida total de 263 bbl (0.14% de la producción)."
+  ],
+  "novedades_madrugada": [
+    "05:00 Termocoa genera 40.61 MW.",
+    "05:00 Termosuria genera 59.93 MW (TES-1 35.92 MW + TES-2 0 MW (indisponible) + TES-3 24.01 MW).",
+    "05:00 Apiay genera 0.73 MW; PGG_EA1 genera 1.49 MW; APG_GGCH genera 0 MW.",
+    "05:00 Importación GEB 230 kV 175.76 MW; Importación Cenit 37.94 MW.",
+    "05:00 Frontera Suria indisponible; Frontera Ocoa disponible 0 MW.",
+    "05:00 Bancos: CDC 9.92 MVAr; CMD 5.11 MVAr; CDK 115 kV 20.51 MVAr; CDK 34.5 kV 5.18 MVAr; CDF 0 MVAr (indisponible); CDO 0 MVAr (indisponible)."
+  ],
+  "riesgos": [
+    "TES-2 indisponible mantiene la necesidad de respaldo con importación desde GEB y Cenit.",
+    "Frontera Suria-EMSA indisponible reduce resiliencia ante contingencias y limita alternativas de suministro.",
+    "Eventos de distribución (P1-CDA y P5-CDC) con deslastre >7 MW indican riesgo de recurrencia e impacto a pozos.",
+    "Aisladores flameados cerca del pozo A10 (P1-CDA): riesgo de repetición de falla bifásica a tierra.",
+    "Evento por fauna en CL104 (P5-CDC): riesgo recurrente si no se implementa mitigación.",
+    "Bancos de compensación CDF y CDO indisponibles: riesgo sobre perfiles de tensión/reactivos.",
+    "Brechas SCADA (TR40 Apiay, análogos TES3/TR1-CDS/TR2-CDS/TR3-CDO, variables CCMERS, integración CPO9 y RC intermedios) reducen observabilidad y respuesta."
   ],
   "recomendaciones": [
-    "Acelerar retorno a servicio de TES-2 para reducir dependencia de importaciones",
-    "Intervenir aisladores flameados en pozo A10 y mitigación de fauna en CL104",
-    "Revisar eficiencia térmica y ajuste operativo de TES-3",
-    "Corregir punto caliente en acople de barras 2-3 en CDS",
-    "Priorizar recuperación de señales SCADA en generación y subestaciones"
-  ]
+    "Mantener control operativo por dependencia de importación y priorizar gestión de retorno TES-2 (cronograma, pruebas y repuestos críticos).",
+    "Intervenir correctivamente los aisladores flameados en estructura adyacente al pozo A10 (P1-CDA) y realizar inspección ampliada del tramo.",
+    "Implementar mitigación de fauna en CL104 (P5-CDC): guardas/cubiertas aislantes y disuasores para reducir recurrencia.",
+    "Monitorear y gestionar perfiles de tensión/reactivos por indisponibilidad de bancos CDF/CDO; priorizar plan de retorno o compensación alternativa.",
+    "Cerrar brechas SCADA críticas: recuperar análogos de bahías (TES3/TR1-CDS/TR2-CDS/TR3-CDO), variables CCMERS, e integrar medición CPO9 y RC intermedios (Apiay/Chichimene).",
+    "Revisar eficiencia y operación de TES-3 por consumo específico de gas más alto que el resto de térmicas; verificar calibración de medición gas/energía y condiciones de carga."
+  ],
+  "raw": ""
 }
