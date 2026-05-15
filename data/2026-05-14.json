@@ -1,0 +1,99 @@
+{
+  "reporte": {
+    "tipo": "REPORTE_ELECTRICO_DIARIO",
+    "fecha": "2026-05-14",
+    "zona": "Castilla - Apiay - Chichimene - CPO9",
+    "estado_general": "ALERTA"
+  },
+  "consignas_15_05": {
+    "stn": "Sin consignaciones GEB Meta",
+    "str_emsa": "Sin consignaciones. Frontera Suria indisponible",
+    "sispot": "TES-2 indisponible por cambio de turbina"
+  },
+  "generacion_promedio_mw": {
+    "termocoa": 39.89,
+    "tes1": 35.06,
+    "tes2": 0.0,
+    "tes3": 23.19,
+    "psfv_castilla": 2.89,
+    "psfv_san_fernando": 9.19,
+    "apiay": 0.81,
+    "copower_ea1": 1.23
+  },
+  "energia_diaria_mwh": {
+    "tes1": 841.51,
+    "tes3": 556.50,
+    "termocoa": 957.40,
+    "total_demanda": 7455.78
+  },
+  "tes1_verificacion": {
+    "potencia_promedio_mw": 35.06,
+    "potencia_snapshot_15_05_05_00_mw": 35.92,
+    "estado": "OK",
+    "criterio": "Consistencia energía diaria / potencia promedio"
+  },
+  "importaciones_mw": {
+    "geb_230kv": 172.54,
+    "cenit": 27.25,
+    "suria": 0.0
+  },
+  "eventos_electricos": [
+    {
+      "hora": "01:26",
+      "activo": "Circuito P1-CDA",
+      "causa": "Falla bifásica a tierra",
+      "impacto_mw": 8.0,
+      "diferida_bbl": 56
+    },
+    {
+      "hora": "07:59",
+      "activo": "Circuito P5-CDC",
+      "causa": "Fauna en CL104",
+      "impacto_mw": 7.1,
+      "diferida_bbl": 137
+    }
+  ],
+  "diferida_bbl": {
+    "castilla": 199,
+    "apiay": 63,
+    "total": 263,
+    "porcentaje_produccion": 0.14
+  },
+  "consumo_gas": {
+    "termocoa_mcf": 7897.3,
+    "tes1_mcf": 7438.0,
+    "tes3_mcf": 5440.0,
+    "total_mcf": 20775.3
+  },
+  "eficiencia_gas_mcf_mwh": {
+    "termocoa": 8.25,
+    "tes1": 8.84,
+    "tes3": 9.78
+  },
+  "produccion_bbl": {
+    "gaa": 104154,
+    "glh": 87042,
+    "total": 191196
+  },
+  "alertas": [
+    {
+      "nivel": "ROJA",
+      "descripcion": "TES-2 indisponible y frontera Suria fuera de servicio"
+    },
+    {
+      "nivel": "AMARILLA",
+      "descripcion": "Eventos de red con deslastres >7 MW y diferida significativa"
+    },
+    {
+      "nivel": "AMARILLA",
+      "descripcion": "TES-3 con consumo específico de gas elevado"
+    }
+  ],
+  "recomendaciones": [
+    "Acelerar retorno a servicio de TES-2 para reducir dependencia de importaciones",
+    "Intervenir aisladores flameados en pozo A10 y mitigación de fauna en CL104",
+    "Revisar eficiencia térmica y ajuste operativo de TES-3",
+    "Corregir punto caliente en acople de barras 2-3 en CDS",
+    "Priorizar recuperación de señales SCADA en generación y subestaciones"
+  ]
+}
