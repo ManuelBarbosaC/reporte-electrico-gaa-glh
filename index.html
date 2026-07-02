@@ -219,14 +219,30 @@ function renderEstado(){
 // =================================
 // CARGA DESDE GITHUB
 // =================================
-fetch("data/2021-08-01.json")  // usa fecha de prueba
+
+fetch("manifest.json")
+.then(r=>r.json())
+.then(manifest=>{
+
+  const fechas = manifest.fechas;
+
+  const ultima = fechas[fechas.length - 1];
+
+  return fetch("data/" + ultima + ".json");
+})
 .then(r=>r.json())
 .then(data=>{
+
   renderSistema(data);
   renderSCADA(data);
   renderAlertas(data);
   renderEstado();
+
+})
+.catch(err=>{
+  console.error(err);
 });
+
 
 </script>
 
