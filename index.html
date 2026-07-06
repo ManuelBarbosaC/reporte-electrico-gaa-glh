@@ -51,9 +51,9 @@ canvas{width:100%;height:400px;background:#0a0f1a;border-radius:10px}
 
 <script>
 
-// =================================
+// =============================
 // SCADA ANIMADO
-// =================================
+// =============================
 let flowOffset = 0;
 
 function renderSCADA(data){
@@ -68,7 +68,6 @@ function renderSCADA(data){
     let cx=c.width/2;
     let cy=c.height/2;
 
-    // nodo central
     ctx.fillStyle="#00c853";
     ctx.beginPath();
     ctx.arc(cx,cy,20,0,6.28);
@@ -89,7 +88,6 @@ function renderSCADA(data){
     let trs=data?.sistema_electrico?.transformadores||[];
     let lns=data?.sistema_electrico?.lineas||[];
 
-    // TR
     trs.forEach((t,i)=>{
       let angle=i/trs.length*Math.PI;
       let x=cx+Math.cos(angle)*150;
@@ -109,7 +107,6 @@ function renderSCADA(data){
       flow(cx,cy,x,y,color);
     });
 
-    // líneas
     lns.forEach((l,i)=>{
       let angle=i/lns.length*Math.PI+Math.PI;
       let x=cx+Math.cos(angle)*220;
@@ -132,12 +129,13 @@ function renderSCADA(data){
     flowOffset+=0.2;
     requestAnimationFrame(draw);
   }
+
   draw();
 }
 
-// =================================
-// SISTEMA ELECTRICO
-// =================================
+// =============================
+// SISTEMA
+// =============================
 function renderSistema(data){
 
   let boxTR=document.getElementById("transformadores");
@@ -166,12 +164,11 @@ function renderSistema(data){
   (data.sistema_electrico.reactiva||[]).forEach(r=>{
     boxR.innerHTML+=`<div class="k">${r.nombre}<br>${r.MVAr} MVAr</div>`;
   });
-
 }
 
-// =================================
+// =============================
 // ALERTAS
-// =================================
+// =============================
 function renderAlertas(data){
 
   let ul=document.getElementById("alertas");
@@ -179,18 +176,18 @@ function renderAlertas(data){
 
   let alerts=[];
 
-  let dem=data.kpis.demanda_promedio_MW||0;
-  let stn=data.kpis.importacion_GEB_230kV_MW||0;
-  let pct=(stn/dem)*100;
+  let dem=data?.kpis?.demanda_promedio_MW||0;
+  let stn=data?.kpis?.importacion_GEB_230kV_MW||0;
+  let pct=(dem>0)?(stn/dem)*100:0;
 
   if(pct>70) alerts.push("🔴 Alta dependencia STN");
   else if(pct>50) alerts.push("🟡 Dependencia STN");
 
-  (data.sistema_electrico.transformadores||[]).forEach(t=>{
+  (data?.sistema_electrico?.transformadores||[]).forEach(t=>{
     if(t.MW>85) alerts.push("🔴 TR crítico "+t.nombre);
   });
 
-  if(alerts.length===0) alerts.push("🟢 Normal");
+  if(alerts.length===0) alerts.push("🟢 Sistema normal");
 
   alerts.forEach(a=>{
     let li=document.createElement("li");
@@ -199,9 +196,9 @@ function renderAlertas(data){
   });
 }
 
-// =================================
+// =============================
 // ESTADO
-// =================================
+// =============================
 function renderEstado(){
 
   let items=[...document.querySelectorAll("#alertas li")];
@@ -216,33 +213,50 @@ function renderEstado(){
   document.getElementById("estadoSistema").innerText=estado;
 }
 
-// =================================
-// CARGA DESDE GITHUB
-// =================================
+// =============================
+// CARGA DINÁMICA (CORREGIDO)
+// =============================
+function cargarDatos(){
 
-fetch("manifest.json")
-.then(r=>r.json())
-.then(manifest=>{
+  fetch("manifest.json",{cache:"no-store"})
+  .then(res=>{
+    if(!res.ok) throw new Error("No cargó manifest.json");
+    return res.json();
+  })
+  .then(manifest=>{
 
-  const fechas = manifest.fechas;
+    const fechas = (manifest.fechas || []).sort();
 
-  const ultima = fechas[fechas.length - 1];
+    if(fechas.length === 0){
+      throw new Error("No hay datos disponibles");
+    }
 
-  return fetch("data/" + ultima + ".json");
-})
-.then(r=>r.json())
-.then(data=>{
+    const ultima = fechas[fechas.length - 1];
 
-  renderSistema(data);
-  renderSCADA(data);
-  renderAlertas(data);
-  renderEstado();
+    console.log("Cargando:", ultima);
 
-})
-.catch(err=>{
-  console.error(err);
-});
+    return fetch("data/" + ultima + ".json",{cache:"no-store"});
+  })
+  .then(res=>{
+    if(!res.ok) throw new Error("No existe JSON");
+    return res.json();
+  })
+  .then(data=>{
 
+    renderSistema(data);
+    renderSCADA(data);
+    renderAlertas(data);
+    renderEstado();
+
+  })
+  .catch(err=>{
+    console.error(err);
+    alert("Error: " + err.message);
+  });
+}
+
+// ✅ EJECUCIÓN AUTOMÁTICA
+cargarDatos();
 
 </script>
 
