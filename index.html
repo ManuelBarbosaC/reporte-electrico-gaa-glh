@@ -18,36 +18,26 @@ canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
 
 <h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
 
-<!-- KPIs -->
 <div class="card">
 <h3>📊 KPIs</h3>
 <div id="kpis" class="grid"></div>
 </div>
 
-<!-- COMPARATIVO -->
 <div class="card">
 <h3>📊 HOY vs AYER</h3>
 <div id="comparativo" class="grid"></div>
 </div>
 
-<!-- GRAFICO -->
 <div class="card">
 <h3>📈 Historial Demanda</h3>
 <canvas id="grafico"></canvas>
 </div>
 
-<!-- CONTROL SCADA -->
 <div class="card">
-<label><input type="checkbox" id="verTR" checked> Transformadores</label>
-<label><input type="checkbox" id="verLineas" checked> Líneas</label>
-</div>
-
-<!-- SCADA -->
-<div class="card">
+<h3>🖥️ SCADA</h3>
 <canvas id="scada"></canvas>
 </div>
 
-<!-- ALERTAS -->
 <div class="card">
 <h3>🚨 Alertas</h3>
 <ul id="alertas"></ul>
@@ -60,54 +50,69 @@ canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
 
 <script>
 
-// KPIs
+// ================= KPIs =================
 function renderKpis(data){
 
-  const demanda =
-    data.kpis.demanda_promedio_MW ??
-    data.kpis.demanda_total_MW ??
-    0;
+  const d = data.kpis || {};
 
-  const STN =
-    data.kpis.importacion_GEB_230kV_MW ??
-    data.kpis.STN ??
-    0;
-
-  const gen =
-    data.kpis.generacion_total_MW ??
-    data.kpis.Generacion_Total ??
-    0;
+  const demanda = d.demanda_promedio_MW ?? d.demanda_total_MW ?? 0;
+  const stn = d.importacion_GEB_230kV_MW ?? d.STN ?? 0;
+  const gen = d.generacion_total_MW ?? d.Generacion_Total ?? 0;
 
   document.getElementById("kpis").innerHTML = `
   <div class="k">Demanda<br>${demanda}</div>
-  <div class="k">STN<br>${STN}</div>
+  <div class="k">STN<br>${stn}</div>
   <div class="k">Generación<br>${gen}</div>`;
 }
 
-// COMPARATIVO
+// ================= COMPARATIVO =================
 function renderComparativo(hoy,ayer){
+
+  if(!ayer){
+    document.getElementById("comparativo").innerHTML =
+      "<div class='k'>Sin histórico suficiente</div>";
+    return;
+  }
+
+  function get(d,k1,k2){
+    return d.kpis[k1] ?? d.kpis[k2] ?? 0;
+  }
 
   function fila(n,h,a){
     if(!a) return `<div class="k">${n}<br>—</div>`;
-    let diff=h-a; let pct=(diff/a)*100;
+    let diff=h-a;
+    let pct=(diff/a)*100;
     let col=diff>0?"ok":"bad";
     let icon=diff>0?"▲":"▼";
+
     return `<div class="k ${col}">
     ${n}<br>${h}<br><small>${icon} ${pct.toFixed(1)}%</small>
     </div>`;
   }
 
+  const demH = get(hoy,"demanda_promedio_MW","demanda_total_MW");
+  const demA = get(ayer,"demanda_promedio_MW","demanda_total_MW");
+
+  const stnH = get(hoy,"importacion_GEB_230kV_MW","STN");
+  const stnA = get(ayer,"importacion_GEB_230kV_MW","STN");
+
+  const genH = get(hoy,"generacion_total_MW","Generacion_Total");
+  const genA = get(ayer,"generacion_total_MW","Generacion_Total");
+
   document.getElementById("comparativo").innerHTML = `
-    ${fila("Demanda",hoy.kpis.demanda_promedio_MW,ayer.kpis.demanda_promedio_MW)}
-    ${fila("STN",hoy.kpis.importacion_GEB_230kV_MW,ayer.kpis.importacion_GEB_230kV_MW)}
-    ${fila("Gen",hoy.kpis.generacion_total_MW,ayer.kpis.generacion_total_MW)}
+    ${fila("Demanda",demH,demA)}
+    ${fila("STN",stnH,stnA)}
+    ${fila("Gen",genH,genA)}
   `;
 }
 
-// GRAFICO
+// ================= GRAFICO =================
 function renderGrafico(hist){
 
-  if(!hist || hist.length < 2) return;
+  if(!hist || hist.length < 2){
+    console.warn("Sin histórico suficiente");
+    return;
+  }
 
   const c=document.getElementById("grafico");
   const ctx=c.getContext("2d");
@@ -115,14 +120,13 @@ function renderGrafico(hist){
   c.width=c.offsetWidth;
   c.height=300;
 
-  const datos = hist.map(d => d?.kpis?.demanda_promedio_MW || 0);
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const datos = hist.map(d=>d?.kpis?.demanda_promedio_MW || 0);
 
   const max=Math.max(...datos);
   const min=Math.min(...datos);
-
-  const rango = (max-min) || 1;
-
-  ctx.clearRect(0,0,c.width,c.height);
+  const rango=max-min || 1;
 
   ctx.beginPath();
   ctx.strokeStyle="#FFD100";
@@ -130,25 +134,24 @@ function renderGrafico(hist){
   datos.forEach((v,i)=>{
     const x=i/(datos.length-1)*c.width;
     const y=c.height-((v-min)/rango)*c.height;
-
-    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   });
 
   ctx.stroke();
 }
 
-// SCADA (SIN PARPADEO)
+// ================= SCADA =================
 let iniciado=false;
-
 function renderSCADA(data){
 
   if(iniciado) return;
   iniciado=true;
 
-  const ctx=document.getElementById("scada").getContext("2d");
   const c=document.getElementById("scada");
+  const ctx=c.getContext("2d");
 
-  c.width=c.offsetWidth; c.height=300;
+  c.width=c.offsetWidth;
+  c.height=300;
 
   let offset=0;
 
@@ -156,20 +159,11 @@ function renderSCADA(data){
 
     ctx.clearRect(0,0,c.width,c.height);
 
-    let cx=c.width/2; let cy=c.height/2;
+    let cx=c.width/2;
+    let cy=c.height/2;
 
     ctx.fillStyle="#00c853";
     ctx.beginPath(); ctx.arc(cx,cy,15,0,6.28); ctx.fill();
-
-    function flujo(x1,y1,x2,y2,color){
-      for(let i=0;i<5;i++){
-        let t=(i+offset)%5/5;
-        ctx.fillStyle=color;
-        ctx.beginPath();
-        ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,3,0,6.28);
-        ctx.fill();
-      }
-    }
 
     offset+=0.05;
     requestAnimationFrame(draw);
@@ -178,60 +172,70 @@ function renderSCADA(data){
   draw();
 }
 
-// ALERTAS
+// ================= ALERTAS =================
 function renderAlertas(data){
   let ul=document.getElementById("alertas");
   ul.innerHTML="";
-  if(data.kpis.importacion_GEB_230kV_MW/data.kpis.demanda_promedio_MW>0.7)
+  let d=data.kpis||{};
+  if((d.importacion_GEB_230kV_MW||0)/(d.demanda_promedio_MW||1)>0.7)
     ul.innerHTML="<li>🔴 Alta dependencia STN</li>";
   else ul.innerHTML="<li>🟢 Sistema estable</li>";
 }
 
-// ESTADO
+// ================= ESTADO =================
 function renderEstado(){
   document.getElementById("estadoSistema").innerText="🟢 NORMAL";
 }
 
-// CARGA
+// ================= CARGA =================
 function cargarDatos(){
 
   fetch("manifest.json")
-  .then(r=>r.json())
-  .then(manifest=>{
+  .then(r => r.json())
+  .then(async manifest => {
 
-    const fechas=manifest.fechas.sort();
+    const fechas = manifest.fechas.sort();
 
-    return Promise.all([
-      fetch("data/"+fechas.at(-1)+".json").then(r=>r.json()),
-      Promise.all(
-  fechas.slice(-7).map(f =>
-    fetch("data/"+f+".json",{cache:"no-store"})
-      .then(r => {
-        if(!r.ok) return null;
-        return r.json();
+    const hoy_fecha = fechas.at(-1);
+
+    const hoy = await fetch("data/"+hoy_fecha+".json").then(r=>r.json());
+
+    const hist_raw = await Promise.all(
+      fechas.slice(-7).map(async f => {
+        try{
+          const r = await fetch("data/"+f+".json");
+          if(!r.ok) return null;
+          return await r.json();
+        }catch{
+          return null;
+        }
       })
-  )
-).then(arr => arr.filter(x => x !== null))
-    ]);
+    );
+
+    return {hoy, hist_raw};
 
   })
-.then(([hoy, hist_raw])=>{
+  .then(({hoy, hist_raw}) => {
 
-  const hist = (hist_raw || []).filter(x => x && x.kpis);
+    const hist = hist_raw.filter(x => x && x.kpis);
 
-  if(hist.length < 2){
-    console.log("No hay histórico suficiente");
-  }
+    const hoyData = hoy;
+    const ayerData = hist.length > 1 ? hist.at(-2) : null;
 
-  let ayer = hist.length > 1 ? hist[hist.length - 2] : hoy;
+    renderKpis(hoyData);
+    renderComparativo(hoyData,ayerData);
+    renderGrafico(hist);
+    renderSCADA(hoyData);
+    renderAlertas(hoyData);
+    renderEstado();
 
-  renderKpis(hoy);
-  renderComparativo(hoy, ayer);
-  renderGrafico(hist);
-  renderSCADA(hoy);
-  renderAlertas(hoy);
-  renderEstado();
-})
+  })
+  .catch(err=>{
+    console.error(err);
+    alert("Error cargando datos");
+  });
+
+}
 
 cargarDatos();
 
