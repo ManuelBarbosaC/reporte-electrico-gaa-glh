@@ -1,0 +1,394 @@
+{
+  "fecha": "2022-01-29",
+  "kpis": {
+    "demanda_total_MW": 420.71,
+    "generacion_total_MW": 119.1,
+    "gas_total_KPC": 25003.72,
+    "STN": 70.46,
+    "STR": 0
+  },
+  "kpis_generacion": {
+    "TEO": {
+      "potencia_MW": 38.62
+    },
+    "TES_1": {
+      "potencia_MW": 37.48
+    },
+    "TES_2": {
+      "potencia_MW": 20.12
+    },
+    "TES_3": {
+      "potencia_MW": 22.88
+    }
+  },
+  "sistema_electrico": {
+    "transformadores": [
+      {
+        "nombre": "TR01_CDC_MW",
+        "MW": 18.88
+      },
+      {
+        "nombre": "TR02_CDC_MW",
+        "MW": 11.25
+      },
+      {
+        "nombre": "TR03_CDC_MW",
+        "MW": 24.83
+      },
+      {
+        "nombre": "TR01_CDF_MW",
+        "MW": 12.12
+      },
+      {
+        "nombre": "TR02_CDF_MW",
+        "MW": 17.29
+      },
+      {
+        "nombre": "TR01_CDK_MW",
+        "MW": 24.33
+      },
+      {
+        "nombre": "TR02_CDK_MW",
+        "MW": 21.42
+      },
+      {
+        "nombre": "TR03_CDK_MW",
+        "MW": 0
+      },
+      {
+        "nombre": "TR01_CDO_MW",
+        "MW": 17.5
+      },
+      {
+        "nombre": "TR02_CDO_MW",
+        "MW": 20.92
+      },
+      {
+        "nombre": "TR03_CDO_MW",
+        "MW": 6.5
+      },
+      {
+        "nombre": "TR01_CDS_MW",
+        "MW": 9.93
+      },
+      {
+        "nombre": "TR02_CDS_MW",
+        "MW": 7.84
+      }
+    ],
+    "lineas": [
+      {
+        "nombre": "TEO_CDO_MW",
+        "MW": 39
+      },
+      {
+        "nombre": "CDO_CDC_MW",
+        "MW": 18.35
+      },
+      {
+        "nombre": "CDS_CDK_MW",
+        "MW": 88.38
+      },
+      {
+        "nombre": "CDS_EMSA_MW",
+        "MW": 0
+      },
+      {
+        "nombre": "CDC_CDK_MW",
+        "MW": 36.16
+      },
+      {
+        "nombre": "CDF_CDK_MW",
+        "MW": 3.15
+      },
+      {
+        "nombre": "CDO_CDF_MW",
+        "MW": 24.24
+      },
+      {
+        "nombre": "CENIT_CDF_MW",
+        "MW": 8.2
+      },
+      {
+        "nombre": "Compensacion_Reactiva_CDF_MW",
+        "MW": 0.42
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDK_MW",
+        "MW": 0.58
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDC_MW",
+        "MW": 0
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDK_34.5_kV__MW",
+        "MW": 0
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDO_MW",
+        "MW": 0
+      }
+    ],
+    "activos": [
+      {
+        "nombre": "Pozos_Sur",
+        "MW": 54.5
+      },
+      {
+        "nombre": "Pozos_Norte",
+        "MW": 41.11
+      },
+      {
+        "nombre": "Pozos_Este",
+        "MW": 0.1
+      },
+      {
+        "nombre": "EC_I",
+        "MW": 0.13
+      },
+      {
+        "nombre": "EC_II",
+        "MW": 5.04
+      },
+      {
+        "nombre": "EC_III",
+        "MW": 12.58
+      },
+      {
+        "nombre": "Vertimiento_EC_II",
+        "MW": 0.17
+      },
+      {
+        "nombre": "Pozos_GDT",
+        "MW": 95.71
+      },
+      {
+        "nombre": "Estación_Chichimene",
+        "MW": 3.17
+      },
+      {
+        "nombre": "Pozos_Chichimene",
+        "MW": 25.9
+      },
+      {
+        "nombre": "Pozos_Chichimene_SW",
+        "MW": 10.25
+      },
+      {
+        "nombre": "Total_Pozos_GCH",
+        "MW": 36.15
+      }
+    ],
+    "reactiva": [
+      {
+        "nombre": "TEO_MVAr",
+        "MVAr": 15.13
+      },
+      {
+        "nombre": "TES1_MVAr",
+        "MVAr": 11.03
+      },
+      {
+        "nombre": "TES2_MVAr",
+        "MVAr": 3.51
+      },
+      {
+        "nombre": "TM2500_MVAr",
+        "MVAr": 3.04
+      },
+      {
+        "nombre": "SIN_MVAr",
+        "MVAr": 8.44
+      },
+      {
+        "nombre": "GLP_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "GApiay_MVAr",
+        "MVAr": 1.98
+      },
+      {
+        "nombre": "Gsolar_Castilla_MVAr",
+        "MVAr": 0.84
+      },
+      {
+        "nombre": "Gsolar_CENIT_MVAr",
+        "MVAr": 1.42
+      },
+      {
+        "nombre": "GENCH_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "TEO_CDO_MVAr",
+        "MVAr": 17.3
+      },
+      {
+        "nombre": "CDO_CDC_MVAr",
+        "MVAr": 8.18
+      },
+      {
+        "nombre": "CDS_CDK_MVAr",
+        "MVAr": 4.52
+      },
+      {
+        "nombre": "CDS_EMSA_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "CDC_CDK_MVAr",
+        "MVAr": 6.1
+      },
+      {
+        "nombre": "CDF_CDK_MVAr",
+        "MVAr": 4.54
+      },
+      {
+        "nombre": "CDO_CDF_MVAr",
+        "MVAr": 7.55
+      },
+      {
+        "nombre": "CENIT_CDF_MVAr",
+        "MVAr": 1.39
+      },
+      {
+        "nombre": "TR01_CDC_MVAr",
+        "MVAr": 4.67
+      },
+      {
+        "nombre": "TR02_CDC_MVAr",
+        "MVAr": 2.88
+      },
+      {
+        "nombre": "TR03_CDC_MVAr",
+        "MVAr": 7.08
+      },
+      {
+        "nombre": "TR01_CDF_MVAr",
+        "MVAr": 3.17
+      },
+      {
+        "nombre": "TR02_CDF_MVAr",
+        "MVAr": 3.42
+      },
+      {
+        "nombre": "TR01_CDK_MVAr",
+        "MVAr": 8
+      },
+      {
+        "nombre": "TR02_CDK_MVAr",
+        "MVAr": 9.29
+      },
+      {
+        "nombre": "TR03_CDK_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "TR01_CDO_MVAr",
+        "MVAr": 4.33
+      },
+      {
+        "nombre": "TR02_CDO_MVAr",
+        "MVAr": 5.79
+      },
+      {
+        "nombre": "TR03_CDO_MVAr",
+        "MVAr": 2.17
+      },
+      {
+        "nombre": "TR01_CDS_MVAr",
+        "MVAr": 4.65
+      },
+      {
+        "nombre": "TR02_CDS_MVAr",
+        "MVAr": 3.13
+      },
+      {
+        "nombre": "Fr.OCOA_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Fr.SURIA_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Fr.Ocoa_Cenit_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Fr.GEB230_kV_MVAr",
+        "MVAr": 8.44
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDF_MVAr",
+        "MVAr": 10.63
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDK_MVAr",
+        "MVAr": 20.58
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDC_MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDK_34.5_kV__MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDO__MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Total_Comp_MVAr",
+        "MVAr": 31.21
+      },
+      {
+        "nombre": "GDA_MVAr",
+        "MVAr": 7.41
+      },
+      {
+        "nombre": "GDT_MVAr",
+        "MVAr": 38.51
+      },
+      {
+        "nombre": "GCH_MVAr",
+        "MVAr": 11.18
+      },
+      {
+        "nombre": "GLC_MVAr",
+        "MVAr": 1.11
+      },
+      {
+        "nombre": "SanFernando_Cenit_MVAr",
+        "MVAr": 2.09
+      },
+      {
+        "nombre": "EBA_Cenit_MVAr",
+        "MVAr": 0.37
+      },
+      {
+        "nombre": "GEN1_EC3__MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "STN_.MVAr.",
+        "MVAr": 0
+      },
+      {
+        "nombre": "STR_.MVAr.",
+        "MVAr": 0
+      },
+      {
+        "nombre": "Compensación_Reactiva_CMD__MVAr",
+        "MVAr": 0
+      },
+      {
+        "nombre": "GEN_PGGEA1__MVAr",
+        "MVAr": 0
+      }
+    ]
+  }
+}
