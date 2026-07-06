@@ -197,7 +197,15 @@ function cargarDatos(){
 
     return Promise.all([
       fetch("data/"+fechas.at(-1)+".json").then(r=>r.json()),
-      Promise.all(fechas.slice(-7).map(f=>fetch("data/"+f+".json").then(r=>r.json())))
+      Promise.all(
+  fechas.slice(-7).map(f =>
+    fetch("data/"+f+".json",{cache:"no-store"})
+      .then(r => {
+        if(!r.ok) return null;
+        return r.json();
+      })
+  )
+).then(arr => arr.filter(x => x !== null))
     ]);
 
   })
