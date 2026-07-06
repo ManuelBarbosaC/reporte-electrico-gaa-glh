@@ -106,26 +106,32 @@ function renderComparativo(hoy,ayer){
 
 // GRAFICO
 function renderGrafico(hist){
+
+  if(!hist || hist.length < 2) return;
+
   const c=document.getElementById("grafico");
   const ctx=c.getContext("2d");
 
-  c.width=c.offsetWidth; c.height=300;
+  c.width=c.offsetWidth;
+  c.height=300;
+
+  const datos = hist.map(d => d?.kpis?.demanda_promedio_MW || 0);
+
+  const max=Math.max(...datos);
+  const min=Math.min(...datos);
+
+  const rango = (max-min) || 1;
 
   ctx.clearRect(0,0,c.width,c.height);
-
-  let datos=hist.map(d=>d.kpis.demanda_promedio_MW);
-
-  let max=Math.max(...datos);
-  let min=Math.min(...datos);
-  let rango=max-min||1;
 
   ctx.beginPath();
   ctx.strokeStyle="#FFD100";
 
   datos.forEach((v,i)=>{
-    let x=i/(datos.length-1)*c.width;
-    let y=c.height-((v-min)/rango)*c.height;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    const x=i/(datos.length-1)*c.width;
+    const y=c.height-((v-min)/rango)*c.height;
+
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
   });
 
   ctx.stroke();
@@ -209,20 +215,23 @@ function cargarDatos(){
     ]);
 
   })
-  .then(([hoy,hist])=>{
+.then(([hoy, hist_raw])=>{
 
-    let ayer=hist.length>1?hist.at(-2):hoy;
+  const hist = (hist_raw || []).filter(x => x && x.kpis);
 
-    renderKpis(hoy);
-    renderComparativo(hoy,ayer);
-    renderGrafico(hist);
-    renderSCADA(hoy);
-    renderAlertas(hoy);
-    renderEstado();
+  if(hist.length < 2){
+    console.log("No hay histórico suficiente");
+  }
 
-  });
+  let ayer = hist.length > 1 ? hist[hist.length - 2] : hoy;
 
-}
+  renderKpis(hoy);
+  renderComparativo(hoy, ayer);
+  renderGrafico(hist);
+  renderSCADA(hoy);
+  renderAlertas(hoy);
+  renderEstado();
+})
 
 cargarDatos();
 
