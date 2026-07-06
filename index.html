@@ -2,28 +2,49 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SCADA Eléctrico – GAA/GLH</title>
+<title>Dashboard Eléctrico – GAA/GLH</title>
 
 <style>
 body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .card{background:#111e2b;margin:10px;padding:10px;border-radius:10px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.k{background:#0b141f;padding:8px;border-radius:8px}
-.ok{color:#00c853}
-.warn{color:#ffd600}
-.bad{color:#ff1744}
-canvas{width:100%;height:400px;background:#0a0f1a;border-radius:10px}
+.k{background:#0b141f;padding:8px;border-radius:8px;text-align:center}
+.ok{color:#00c853} .warn{color:#ffd600} .bad{color:#ff1744}
+canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
+select{padding:6px;margin-top:5px}
 </style>
 </head>
 
 <body>
 
-<h2 style="padding:10px">⚡ SCADA Sistema Eléctrico</h2>
+<h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
 
+<!-- ================= KPI ================= -->
 <div class="card">
+<h3>📊 KPIs</h3>
+<div id="kpis"></div>
+</div>
+
+<!-- ================= GRÁFICO ================= -->
+<div class="card">
+<h3>📈 Histórico (últimos días)</h3>
+<canvas id="grafico"></canvas>
+</div>
+
+<!-- ================= CONTROL SCADA ================= -->
+<div class="card">
+<h3>⚙️ Control SCADA</h3>
+<label><input type="checkbox" id="verTR" checked> Transformadores</label>
+<label style="margin-left:20px"><input type="checkbox" id="verLineas" checked> Líneas</label>
+</div>
+
+<!-- ================= SCADA ================= -->
+<div class="card">
+<h3>🖥️ SCADA Sistema Eléctrico</h3>
 <canvas id="scada"></canvas>
 </div>
 
+<!-- ================= SISTEMA ================= -->
 <div class="card">
 <h3>Transformadores</h3>
 <div id="transformadores" class="grid"></div>
@@ -39,8 +60,9 @@ canvas{width:100%;height:400px;background:#0a0f1a;border-radius:10px}
 <div id="reactiva" class="grid"></div>
 </div>
 
+<!-- ================= ALERTAS ================= -->
 <div class="card">
-<h3>Alertas</h3>
+<h3>🚨 Alertas</h3>
 <ul id="alertas"></ul>
 </div>
 
@@ -52,14 +74,66 @@ canvas{width:100%;height:400px;background:#0a0f1a;border-radius:10px}
 <script>
 
 // =============================
-// SCADA ANIMADO
+// KPIs
 // =============================
-let flowOffset = 0;
+function renderKpis(data){
+
+  document.getElementById("kpis").innerHTML = `
+    Demanda: ${data.kpis.demanda_promedio_MW} MW |
+    STN: ${data.kpis.importacion_GEB_230kV_MW} MW |
+    Generación: ${data.kpis.generacion_total_MW} MW
+  `;
+}
+
+// =============================
+// GRÁFICA (simple historial)
+// =============================
+function renderGrafico(hist){
+
+  const c=document.getElementById("grafico");
+  const ctx=c.getContext("2d");
+
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const datos=Object.values(hist);
+
+  if(datos.length<2) return;
+
+  const max=Math.max(...datos.map(d=>d.kpis.demanda_promedio_MW));
+  const min=Math.min(...datos.map(d=>d.kpis.demanda_promedio_MW));
+
+  const W=c.width;
+  const H=c.height;
+
+  ctx.strokeStyle="#FFD100";
+  ctx.beginPath();
+
+  datos.forEach((d,i)=>{
+    const x=(i/(datos.length-1))*W;
+    const y=H-((d.kpis.demanda_promedio_MW-min)/(max-min))*H;
+
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+  });
+
+  ctx.stroke();
+}
+
+// =============================
+// SCADA
+// =============================
+let flowOffset=0;
 
 function renderSCADA(data){
 
-  const c = document.getElementById("scada");
-  const ctx = c.getContext("2d");
+  const verTR=document.getElementById("verTR").checked;
+  const verLineas=document.getElementById("verLineas").checked;
+
+  const c=document.getElementById("scada");
+  const ctx=c.getContext("2d");
+
+  let trs=verTR?(data.sistema_electrico.transformadores||[]).slice(0,6):[];
+  let lns=verLineas?(data.sistema_electrico.lineas||[]).slice(0,8):[];
 
   function draw(){
 
@@ -69,64 +143,39 @@ function renderSCADA(data){
     let cy=c.height/2;
 
     ctx.fillStyle="#00c853";
-    ctx.beginPath();
-    ctx.arc(cx,cy,20,0,6.28);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,cy,15,0,6.28); ctx.fill();
 
     function flow(x1,y1,x2,y2,color){
-      for(let i=0;i<12;i++){
-        let t=(i+flowOffset)%12/12;
-        let x=x1+(x2-x1)*t;
-        let y=y1+(y2-y1)*t;
+      for(let i=0;i<6;i++){
+        let t=(i+flowOffset)%6/6;
         ctx.fillStyle=color;
         ctx.beginPath();
-        ctx.arc(x,y,3,0,6.28);
+        ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,3,0,6.28);
         ctx.fill();
       }
     }
 
-    let trs=data?.sistema_electrico?.transformadores||[];
-    let lns=data?.sistema_electrico?.lineas||[];
-
     trs.forEach((t,i)=>{
-      let angle=i/trs.length*Math.PI;
-      let x=cx+Math.cos(angle)*150;
-      let y=cy-Math.sin(angle)*120;
+      let a=i/trs.length*Math.PI;
+      let x=cx+Math.cos(a)*140;
+      let y=cy-Math.sin(a)*100;
 
-      let mw=Number(t.MW);
-      let color="lime";
-      if(mw>80) color="red";
-      else if(mw>60) color="yellow";
-
-      ctx.strokeStyle=color;
-      ctx.beginPath();
-      ctx.moveTo(cx,cy);
-      ctx.lineTo(x,y);
-      ctx.stroke();
-
-      flow(cx,cy,x,y,color);
+      ctx.strokeStyle="lime";
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+      flow(cx,cy,x,y,"lime");
     });
 
     lns.forEach((l,i)=>{
-      let angle=i/lns.length*Math.PI+Math.PI;
-      let x=cx+Math.cos(angle)*220;
-      let y=cy-Math.sin(angle)*140;
+      let a=i/lns.length*Math.PI+Math.PI;
+      let x=cx+Math.cos(a)*180;
+      let y=cy-Math.sin(a)*120;
 
-      let mw=Number(l.MW);
-      let color="#4aa3ff";
-      if(mw>110) color="red";
-      else if(mw>70) color="yellow";
-
-      ctx.strokeStyle=color;
-      ctx.beginPath();
-      ctx.moveTo(cx,cy);
-      ctx.lineTo(x,y);
-      ctx.stroke();
-
-      flow(cx,cy,x,y,color);
+      ctx.strokeStyle="cyan";
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+      flow(cx,cy,x,y,"cyan");
     });
 
-    flowOffset+=0.2;
+    flowOffset+=0.08;
     requestAnimationFrame(draw);
   }
 
@@ -134,36 +183,24 @@ function renderSCADA(data){
 }
 
 // =============================
-// SISTEMA
+// SISTEMA TABLAS
 // =============================
 function renderSistema(data){
 
-  let boxTR=document.getElementById("transformadores");
-  boxTR.innerHTML="";
+  document.getElementById("transformadores").innerHTML =
+    data.sistema_electrico.transformadores.map(t =>
+      `<div class="k">${t.nombre}<br>${t.MW} MW</div>`
+    ).join("");
 
-  (data.sistema_electrico.transformadores||[]).forEach(t=>{
-    let c="ok";
-    if(t.MW>80) c="bad";
-    else if(t.MW>60) c="warn";
+  document.getElementById("lineas").innerHTML =
+    data.sistema_electrico.lineas.map(l =>
+      `<div class="k">${l.nombre}<br>${l.MW} MW</div>`
+    ).join("");
 
-    boxTR.innerHTML+=`<div class="k ${c}">${t.nombre}<br>${t.MW} MW</div>`;
-  });
-
-  let boxL=document.getElementById("lineas");
-  boxL.innerHTML="";
-  (data.sistema_electrico.lineas||[]).forEach(l=>{
-    let c="ok";
-    if(l.MW>110) c="bad";
-    else if(l.MW>70) c="warn";
-
-    boxL.innerHTML+=`<div class="k ${c}">${l.nombre}<br>${l.MW} MW</div>`;
-  });
-
-  let boxR=document.getElementById("reactiva");
-  boxR.innerHTML="";
-  (data.sistema_electrico.reactiva||[]).forEach(r=>{
-    boxR.innerHTML+=`<div class="k">${r.nombre}<br>${r.MVAr} MVAr</div>`;
-  });
+  document.getElementById("reactiva").innerHTML =
+    data.sistema_electrico.reactiva.map(r =>
+      `<div class="k">${r.nombre}<br>${r.MVAr} MVAr</div>`
+    ).join("");
 }
 
 // =============================
@@ -174,88 +211,51 @@ function renderAlertas(data){
   let ul=document.getElementById("alertas");
   ul.innerHTML="";
 
-  let alerts=[];
+  let dem=data.kpis.demanda_promedio_MW;
+  let stn=data.kpis.importacion_GEB_230kV_MW;
 
-  let dem=data?.kpis?.demanda_promedio_MW||0;
-  let stn=data?.kpis?.importacion_GEB_230kV_MW||0;
-  let pct=(dem>0)?(stn/dem)*100:0;
-
-  if(pct>70) alerts.push("🔴 Alta dependencia STN");
-  else if(pct>50) alerts.push("🟡 Dependencia STN");
-
-  (data?.sistema_electrico?.transformadores||[]).forEach(t=>{
-    if(t.MW>85) alerts.push("🔴 TR crítico "+t.nombre);
-  });
-
-  if(alerts.length===0) alerts.push("🟢 Sistema normal");
-
-  alerts.forEach(a=>{
-    let li=document.createElement("li");
-    li.innerText=a;
-    ul.appendChild(li);
-  });
+  if(stn/dem>0.7) ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
+  else ul.innerHTML+="<li>🟢 Sistema estable</li>";
 }
 
 // =============================
 // ESTADO
 // =============================
 function renderEstado(){
-
-  let items=[...document.querySelectorAll("#alertas li")];
-
-  let estado="🟢 NORMAL";
-
-  items.forEach(i=>{
-    if(i.innerText.includes("🔴")) estado="🔴 CRÍTICO";
-    else if(i.innerText.includes("🟡") && estado!=="🔴 CRÍTICO") estado="🟡 ALERTA";
-  });
-
-  document.getElementById("estadoSistema").innerText=estado;
+  document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
 }
 
 // =============================
-// CARGA DINÁMICA (CORREGIDO)
+// CARGA DESDE MANIFEST
 // =============================
 function cargarDatos(){
 
   fetch("manifest.json",{cache:"no-store"})
-  .then(res=>{
-    if(!res.ok) throw new Error("No cargó manifest.json");
-    return res.json();
-  })
+  .then(r=>r.json())
   .then(manifest=>{
 
-    const fechas = (manifest.fechas || []).sort();
+    const fechas = manifest.fechas.sort();
+    const ultima = fechas[fechas.length-1];
 
-    if(fechas.length === 0){
-      throw new Error("No hay datos disponibles");
-    }
+    return Promise.all([
+      fetch("data/"+ultima+".json").then(r=>r.json()),
+      Promise.all(fechas.slice(-7).map(f=>fetch("data/"+f+".json").then(r=>r.json())))
+    ]);
 
-    const ultima = fechas[fechas.length - 1];
-
-    console.log("Cargando:", ultima);
-
-    return fetch("data/" + ultima + ".json",{cache:"no-store"});
   })
-  .then(res=>{
-    if(!res.ok) throw new Error("No existe JSON");
-    return res.json();
-  })
-  .then(data=>{
+  .then(([data, hist])=>{
 
+    renderKpis(data);
     renderSistema(data);
     renderSCADA(data);
     renderAlertas(data);
     renderEstado();
+    renderGrafico(hist);
 
-  })
-  .catch(err=>{
-    console.error(err);
-    alert("Error: " + err.message);
   });
+
 }
 
-// ✅ EJECUCIÓN AUTOMÁTICA
 cargarDatos();
 
 </script>
