@@ -62,10 +62,26 @@ canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
 
 // KPIs
 function renderKpis(data){
+
+  const demanda =
+    data.kpis.demanda_promedio_MW ??
+    data.kpis.demanda_total_MW ??
+    0;
+
+  const STN =
+    data.kpis.importacion_GEB_230kV_MW ??
+    data.kpis.STN ??
+    0;
+
+  const gen =
+    data.kpis.generacion_total_MW ??
+    data.kpis.Generacion_Total ??
+    0;
+
   document.getElementById("kpis").innerHTML = `
-  <div class="k">Demanda<br>${data.kpis.demanda_promedio_MW}</div>
-  <div class="k">STN<br>${data.kpis.importacion_GEB_230kV_MW}</div>
-  <div class="k">Generación<br>${data.kpis.generacion_total_MW}</div>`;
+  <div class="k">Demanda<br>${demanda}</div>
+  <div class="k">STN<br>${STN}</div>
+  <div class="k">Generación<br>${gen}</div>`;
 }
 
 // COMPARATIVO
