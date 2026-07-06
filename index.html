@@ -289,12 +289,20 @@ function cargarDatos(){
   })
   .then(([data, hist])=>{
 
-    renderKpis(data);
-    renderSistema(data);
-    renderSCADA(data);
-    renderAlertas(data);
-    renderEstado();
-    renderGrafico(hist);
+
+const hoy = hist[hist.length-1];
+const ayer = hist.length>1 ? hist[hist.length-2] : hoy;
+
+renderKpis(hoy);
+renderSistema(hoy);
+renderSCADA(hoy);
+renderAlertas(hoy);
+renderEstado();
+renderGrafico(hist);
+
+// 🔥 NUEVO
+renderComparativo(hoy,ayer);
+
 
   });
 
