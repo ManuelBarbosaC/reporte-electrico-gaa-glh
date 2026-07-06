@@ -85,6 +85,50 @@ function renderKpis(data){
   `;
 }
 
+function renderComparativo(hoy,ayer){
+
+  const box=document.getElementById("comparativo");
+
+  function calc(nombre, valHoy, valAyer){
+
+    if(!valAyer || valAyer===0){
+      return `<div class="k">${nombre}<br>—</div>`;
+    }
+
+    const diff = valHoy - valAyer;
+    const pct = (diff/valAyer)*100;
+
+    let clase="ok";
+    if(diff<0) clase="bad";
+    if(nombre.includes("STN")) clase = diff>0 ? "bad":"ok";
+
+    const flecha = diff>0 ? "▲" : diff<0 ? "▼" : "●";
+
+    return `
+      <div class="k ${clase}">
+        ${nombre}<br>
+        ${valHoy.toFixed(1)}
+        <br>
+        <small>${flecha} ${pct.toFixed(1)}%</small>
+      </div>
+    `;
+  }
+
+  box.innerHTML = `
+    ${calc("Demanda MW",
+      hoy.kpis.demanda_promedio_MW,
+      ayer.kpis.demanda_promedio_MW)}
+
+    ${calc("Importación STN",
+      hoy.kpis.importacion_GEB_230kV_MW,
+      ayer.kpis.importacion_GEB_230kV_MW)}
+
+    ${calc("Generación MW",
+      hoy.kpis.generacion_total_MW,
+      ayer.kpis.generacion_total_MW)}
+  `;
+}
+
 // =============================
 // GRÁFICA (simple historial)
 // =============================
