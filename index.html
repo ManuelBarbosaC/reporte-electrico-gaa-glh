@@ -11,7 +11,6 @@ body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .k{background:#0b141f;padding:8px;border-radius:8px;text-align:center}
 .ok{color:#00c853} .warn{color:#ffd600} .bad{color:#ff1744}
 canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
-select{padding:6px;margin-top:5px}
 </style>
 </head>
 
@@ -19,48 +18,36 @@ select{padding:6px;margin-top:5px}
 
 <h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
 
-<!-- ================= KPI ================= -->
+<!-- KPIs -->
 <div class="card">
 <h3>📊 KPIs</h3>
-<div id="kpis"></div>
+<div id="kpis" class="grid"></div>
 </div>
 
-<!-- ================= GRÁFICO ================= -->
+<!-- COMPARATIVO -->
 <div class="card">
-<h3>📈 Histórico (últimos días)</h3>
+<h3>📊 HOY vs AYER</h3>
+<div id="comparativo" class="grid"></div>
+</div>
+
+<!-- GRAFICO -->
+<div class="card">
+<h3>📈 Historial Demanda</h3>
 <canvas id="grafico"></canvas>
 </div>
 
-<!-- ================= CONTROL SCADA ================= -->
+<!-- CONTROL SCADA -->
 <div class="card">
-<h3>⚙️ Control SCADA</h3>
 <label><input type="checkbox" id="verTR" checked> Transformadores</label>
-<label style="margin-left:20px"><input type="checkbox" id="verLineas" checked> Líneas</label>
+<label><input type="checkbox" id="verLineas" checked> Líneas</label>
 </div>
 
-<!-- ================= SCADA ================= -->
+<!-- SCADA -->
 <div class="card">
-<h3>🖥️ SCADA Sistema Eléctrico</h3>
 <canvas id="scada"></canvas>
 </div>
 
-<!-- ================= SISTEMA ================= -->
-<div class="card">
-<h3>Transformadores</h3>
-<div id="transformadores" class="grid"></div>
-</div>
-
-<div class="card">
-<h3>Líneas</h3>
-<div id="lineas" class="grid"></div>
-</div>
-
-<div class="card">
-<h3>Reactiva</h3>
-<div id="reactiva" class="grid"></div>
-</div>
-
-<!-- ================= ALERTAS ================= -->
+<!-- ALERTAS -->
 <div class="card">
 <h3>🚨 Alertas</h3>
 <ul id="alertas"></ul>
@@ -73,134 +60,88 @@ select{padding:6px;margin-top:5px}
 
 <script>
 
-// =============================
 // KPIs
-// =============================
-
 function renderKpis(data){
-
   document.getElementById("kpis").innerHTML = `
-    <div class="k">Demanda<br>${data.kpis.demanda_promedio_MW} MW</div>
-    <div class="k">STN<br>${data.kpis.importacion_GEB_230kV_MW} MW</div>
-    <div class="k">Generación<br>${data.kpis.generacion_total_MW} MW</div>
-  `;
+  <div class="k">Demanda<br>${data.kpis.demanda_promedio_MW}</div>
+  <div class="k">STN<br>${data.kpis.importacion_GEB_230kV_MW}</div>
+  <div class="k">Generación<br>${data.kpis.generacion_total_MW}</div>`;
 }
 
-
+// COMPARATIVO
 function renderComparativo(hoy,ayer){
 
-  const box=document.getElementById("comparativo");
-
-  function calc(nombre, valHoy, valAyer){
-
-    if(!valAyer || valAyer===0){
-      return `<div class="k">${nombre}<br>—</div>`;
-    }
-
-    const diff = valHoy - valAyer;
-    const pct = (diff/valAyer)*100;
-
-    let clase="ok";
-    if(diff<0) clase="bad";
-    if(nombre.includes("STN")) clase = diff>0 ? "bad":"ok";
-
-    const flecha = diff>0 ? "▲" : diff<0 ? "▼" : "●";
-
-    return `
-      <div class="k ${clase}">
-        ${nombre}<br>
-        ${valHoy.toFixed(1)}
-        <br>
-        <small>${flecha} ${pct.toFixed(1)}%</small>
-      </div>
-    `;
+  function fila(n,h,a){
+    if(!a) return `<div class="k">${n}<br>—</div>`;
+    let diff=h-a; let pct=(diff/a)*100;
+    let col=diff>0?"ok":"bad";
+    let icon=diff>0?"▲":"▼";
+    return `<div class="k ${col}">
+    ${n}<br>${h}<br><small>${icon} ${pct.toFixed(1)}%</small>
+    </div>`;
   }
 
-  box.innerHTML = `
-    ${calc("Demanda MW",
-      hoy.kpis.demanda_promedio_MW,
-      ayer.kpis.demanda_promedio_MW)}
-
-    ${calc("Importación STN",
-      hoy.kpis.importacion_GEB_230kV_MW,
-      ayer.kpis.importacion_GEB_230kV_MW)}
-
-    ${calc("Generación MW",
-      hoy.kpis.generacion_total_MW,
-      ayer.kpis.generacion_total_MW)}
+  document.getElementById("comparativo").innerHTML = `
+    ${fila("Demanda",hoy.kpis.demanda_promedio_MW,ayer.kpis.demanda_promedio_MW)}
+    ${fila("STN",hoy.kpis.importacion_GEB_230kV_MW,ayer.kpis.importacion_GEB_230kV_MW)}
+    ${fila("Gen",hoy.kpis.generacion_total_MW,ayer.kpis.generacion_total_MW)}
   `;
 }
 
-// =============================
-// GRÁFICA (simple historial)
-// =============================
+// GRAFICO
 function renderGrafico(hist){
-
   const c=document.getElementById("grafico");
   const ctx=c.getContext("2d");
 
-  // ✅ asegurar tamaño real canvas
-  c.width = c.offsetWidth;
-  c.height = 300;
+  c.width=c.offsetWidth; c.height=300;
 
   ctx.clearRect(0,0,c.width,c.height);
 
-  if(!hist || hist.length < 2) return;
+  let datos=hist.map(d=>d.kpis.demanda_promedio_MW);
 
-  const datos = hist.map(d=>d.kpis.demanda_promedio_MW);
+  let max=Math.max(...datos);
+  let min=Math.min(...datos);
+  let rango=max-min||1;
 
-  const max=Math.max(...datos);
-  const min=Math.min(...datos);
-
-  const rango = (max-min) === 0 ? 1 : (max-min);
-
-  const W=c.width;
-  const H=c.height;
-
-  ctx.strokeStyle="#FFD100";
-  ctx.lineWidth=2;
   ctx.beginPath();
+  ctx.strokeStyle="#FFD100";
 
-  datos.forEach((val,i)=>{
-    const x=(i/(datos.length-1))*W;
-    const y=H - ((val-min)/rango)*H;
-
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
+  datos.forEach((v,i)=>{
+    let x=i/(datos.length-1)*c.width;
+    let y=c.height-((v-min)/rango)*c.height;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   });
 
   ctx.stroke();
 }
 
-// =============================
-// SCADA
-// =============================
-let flowOffset=0;
+// SCADA (SIN PARPADEO)
+let iniciado=false;
 
 function renderSCADA(data){
 
-  const verTR=document.getElementById("verTR").checked;
-  const verLineas=document.getElementById("verLineas").checked;
+  if(iniciado) return;
+  iniciado=true;
 
+  const ctx=document.getElementById("scada").getContext("2d");
   const c=document.getElementById("scada");
-  const ctx=c.getContext("2d");
 
-  let trs=verTR?(data.sistema_electrico.transformadores||[]).slice(0,6):[];
-  let lns=verLineas?(data.sistema_electrico.lineas||[]).slice(0,8):[];
+  c.width=c.offsetWidth; c.height=300;
+
+  let offset=0;
 
   function draw(){
 
     ctx.clearRect(0,0,c.width,c.height);
 
-    let cx=c.width/2;
-    let cy=c.height/2;
+    let cx=c.width/2; let cy=c.height/2;
 
     ctx.fillStyle="#00c853";
     ctx.beginPath(); ctx.arc(cx,cy,15,0,6.28); ctx.fill();
 
-    function flow(x1,y1,x2,y2,color){
-      for(let i=0;i<6;i++){
-        let t=(i+flowOffset)%6/6;
+    function flujo(x1,y1,x2,y2,color){
+      for(let i=0;i<5;i++){
+        let t=(i+offset)%5/5;
         ctx.fillStyle=color;
         ctx.beginPath();
         ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,3,0,6.28);
@@ -208,117 +149,52 @@ function renderSCADA(data){
       }
     }
 
-    trs.forEach((t,i)=>{
-      let a=i/trs.length*Math.PI;
-      let x=cx+Math.cos(a)*140;
-      let y=cy-Math.sin(a)*100;
-
-      ctx.strokeStyle="lime";
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-      flow(cx,cy,x,y,"lime");
-    });
-
-    lns.forEach((l,i)=>{
-      let a=i/lns.length*Math.PI+Math.PI;
-      let x=cx+Math.cos(a)*180;
-      let y=cy-Math.sin(a)*120;
-
-      ctx.strokeStyle="cyan";
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-      flow(cx,cy,x,y,"cyan");
-    });
-
-    flowOffset+=0.08;
+    offset+=0.05;
     requestAnimationFrame(draw);
   }
 
   draw();
 }
 
-// =============================
-// SISTEMA TABLAS
-// =============================
-function renderSistema(data){
-
-  document.getElementById("transformadores").innerHTML =
-    data.sistema_electrico.transformadores.map(t =>
-      `<div class="k">${t.nombre}<br>${t.MW} MW</div>`
-    ).join("");
-
-  document.getElementById("lineas").innerHTML =
-    data.sistema_electrico.lineas.map(l =>
-      `<div class="k">${l.nombre}<br>${l.MW} MW</div>`
-    ).join("");
-
-  document.getElementById("reactiva").innerHTML =
-    data.sistema_electrico.reactiva.map(r =>
-      `<div class="k">${r.nombre}<br>${r.MVAr} MVAr</div>`
-    ).join("");
-}
-
-// =============================
 // ALERTAS
-// =============================
 function renderAlertas(data){
-
   let ul=document.getElementById("alertas");
   ul.innerHTML="";
-
-  let dem=data.kpis.demanda_promedio_MW;
-  let stn=data.kpis.importacion_GEB_230kV_MW;
-
-  if(stn/dem>0.7) ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
-  else ul.innerHTML+="<li>🟢 Sistema estable</li>";
+  if(data.kpis.importacion_GEB_230kV_MW/data.kpis.demanda_promedio_MW>0.7)
+    ul.innerHTML="<li>🔴 Alta dependencia STN</li>";
+  else ul.innerHTML="<li>🟢 Sistema estable</li>";
 }
 
-// =============================
 // ESTADO
-// =============================
 function renderEstado(){
-  document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
+  document.getElementById("estadoSistema").innerText="🟢 NORMAL";
 }
 
-// =============================
-// CARGA DESDE MANIFEST
-// =============================
+// CARGA
 function cargarDatos(){
 
-  fetch("manifest.json",{cache:"no-store"})
+  fetch("manifest.json")
   .then(r=>r.json())
   .then(manifest=>{
 
-    const fechas = manifest.fechas.sort();
-    const ultima = fechas[fechas.length-1];
+    const fechas=manifest.fechas.sort();
 
     return Promise.all([
-      fetch("data/"+ultima+".json").then(r=>r.json()),
-      
-      Promise.all(
-        fechas.slice(-7).map(f =>
-          fetch("data/"+f+".json",{cache:"no-store"})
-            .then(r => r.ok ? r.json() : null)
-        )
-      )
-
+      fetch("data/"+fechas.at(-1)+".json").then(r=>r.json()),
+      Promise.all(fechas.slice(-7).map(f=>fetch("data/"+f+".json").then(r=>r.json())))
     ]);
 
   })
-  .then(([data, hist])=>{
+  .then(([hoy,hist])=>{
 
+    let ayer=hist.length>1?hist.at(-2):hoy;
 
-const hoy = hist[hist.length-1];
-const ayer = hist.length>1 ? hist[hist.length-2] : hoy;
-
-renderKpis(hoy);
-renderSistema(hoy);
-renderSCADA(hoy);
-renderAlertas(hoy);
-renderEstado();
-renderGrafico(hist);
-
-// 🔥 NUEVO
-renderComparativo(hoy,ayer);
-
+    renderKpis(hoy);
+    renderComparativo(hoy,ayer);
+    renderGrafico(hist);
+    renderSCADA(hoy);
+    renderAlertas(hoy);
+    renderEstado();
 
   });
 
