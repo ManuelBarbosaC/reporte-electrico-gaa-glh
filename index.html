@@ -277,14 +277,25 @@ async function cargarPorFecha(fecha, fechas){
   const data = await fetch("data/"+fecha+".json")
     .then(r=>r.json());
 
-  const index = fechas.indexOf(fecha);
+// ✅ asegurar orden correcto
+const fechasOrdenadas = [...fechas].sort();
 
-  let anterior = null;
+// ✅ encontrar índice real
+const index = fechasOrdenadas.findIndex(f => f === fecha);
 
-  if(index > 0){
-    anterior = await fetch("data/"+fechas[index-1]+".json")
-      .then(r=>r.json());
+let anterior = null;
+
+if(index > 0){
+
+  const fechaAnterior = fechasOrdenadas[index - 1];
+
+  try {
+    anterior = await fetch("data/"+fechaAnterior+".json")
+      .then(r => r.ok ? r.json() : null);
+  } catch {
+    anterior = null;
   }
+}
 
   // ✅ histórico real
   const hist_raw = await Promise.all(
