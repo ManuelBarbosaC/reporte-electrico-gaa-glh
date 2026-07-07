@@ -22,8 +22,10 @@ h3{margin-top:0}
 <!-- SELECTOR -->
 <div class="card">
 <h3>📅 Selección de fecha</h3>
-<select id="selectFecha"></select>
+
+<input type="date" id="inputFecha">
 <div id="fechaActual" style="margin-top:8px;"></div>
+
 </div>
 
 <!-- KPIs -->
@@ -243,46 +245,67 @@ function renderEstado(){
 }
 
 // ===== SELECTOR =====
-function cargarSelectorFechas(fechas){
-  const select=document.getElementById("selectFecha");
-  select.innerHTML="";
-  fechas.forEach(f=>{
-    let o=document.createElement("option");
-    o.value=f; o.textContent=f;
-    select.appendChild(o);
-  });
-  select.value=fechas.at(-1);
-  select.onchange=()=>cargarPorFecha(select.value,fechas);
+
+function activarCalendario(fechas){
+
+  const input = document.getElementById("inputFecha");
+
+  // ✅ limitar rango
+  input.min = fechas[0];
+  input.max = fechas.at(-1);
+
+  // ✅ valor inicial
+  input.value = fechas.at(-1);
+
+  input.onchange = () => {
+    cargarPorFecha(input.value, fechas);
+  };
+
 }
 
+
 // ===== CARGA POR FECHA =====
-async function cargarPorFecha(fecha,fechas){
 
-  const data=await fetch("data/"+fecha+".json").then(r=>r.json());
 
-  const index=fechas.indexOf(fecha);
+async function cargarPorFecha(fecha, fechas){
 
-  let anterior=null;
-  if(index>0){
-    anterior=await fetch("data/"+fechas[index-1]+".json").then(r=>r.json());
+  if(!fechas.includes(fecha)){
+    alert("⚠️ No hay datos para esa fecha");
+    return;
   }
 
-  let hist_raw=await Promise.all(
+  const data = await fetch("data/"+fecha+".json")
+    .then(r=>r.json());
+
+  const index = fechas.indexOf(fecha);
+
+  let anterior = null;
+
+  if(index > 0){
+    anterior = await fetch("data/"+fechas[index-1]+".json")
+      .then(r=>r.json());
+  }
+
+  // ✅ histórico real
+  const hist_raw = await Promise.all(
     fechas.slice(Math.max(0,index-6),index+1)
-      .map(f=>fetch("data/"+f+".json").then(r=>r.ok?r.json():null))
+      .map(f => fetch("data/"+f+".json")
+        .then(r=>r.ok?r.json():null)
+      )
   );
 
-  const hist=hist_raw.filter(x=>x);
+  const hist = hist_raw.filter(x=>x);
 
   renderFecha(data);
   renderKpis(data);
   renderGeneracion(data);
-  renderComparativo(data,anterior);
+  renderComparativo(data, anterior);
   renderGrafico(hist);
   renderSCADA(data);
   renderAlertas(data);
   renderEstado();
 }
+
 
 // ===== INICIO =====
 async function cargarDatos(){
