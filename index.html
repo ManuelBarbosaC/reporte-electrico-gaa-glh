@@ -305,7 +305,7 @@ if(index > 0){
 
   // ✅ histórico real
   const hist_raw = await Promise.all(
-    fechas.slice(Math.max(0,index-6),index+1)
+    fechasOrdenadas.slice(Math.max(0,index-6),index+1)
       .map(f => fetch("data/"+f+".json")
         .then(r=>r.ok?r.json():null)
       )
