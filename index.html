@@ -308,12 +308,19 @@ async function cargarPorFecha(fecha, fechas){
 
 
 // ===== INICIO =====
+
 async function cargarDatos(){
-  const manifest=await fetch("manifest.json").then(r=>r.json());
-  const fechas=manifest.fechas.sort();
-  cargarSelectorFechas(fechas);
-  await cargarPorFecha(fechas.at(-1),fechas);
+
+  const manifest = await fetch("manifest.json")
+    .then(r=>r.json());
+
+  const fechas = manifest.fechas.sort();
+
+  activarCalendario(fechas);
+
+  await cargarPorFecha(fechas.at(-1), fechas);
 }
+
 
 cargarDatos();
 
