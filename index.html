@@ -19,6 +19,13 @@ h3{margin-top:0}
 
 <h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
 
+<!-- SELECTOR -->
+<div class="card">
+<h3>📅 Selección de fecha</h3>
+<select id="selectFecha"></select>
+<div id="fechaActual" style="margin-top:8px;"></div>
+</div>
+
 <!-- KPIs -->
 <div class="card">
 <h3>📊 KPIs</h3>
@@ -62,11 +69,14 @@ h3{margin-top:0}
 
 <script>
 
+// ====== UTIL ======
+function renderFecha(data){
+  document.getElementById("fechaActual").innerText = data.fecha;
+}
+
 // ===== KPIs =====
 function renderKpis(data){
-
   const d=data.kpis;
-
   document.getElementById("kpis").innerHTML=`
     <div class="k">Demanda<br>${d.demanda_total_MW.toFixed(1)} MW</div>
     <div class="k">STN<br>${d.STN.toFixed(1)} MW</div>
@@ -76,59 +86,55 @@ function renderKpis(data){
 
 // ===== GENERACION =====
 function renderGeneracion(data){
-
   const gen=data.kpis_generacion;
-
   const html=Object.entries(gen).map(([k,v])=>{
-
     let mw=Number(v.potencia_MW||0);
-
     let c="ok";
     if(mw===0) c="bad";
     if(mw>50) c="warn";
-
     return `
       <div class="k ${c}">
-        ${k}<br>
-        ${mw.toFixed(1)} MW
-      </div>
-    `;
+        ${k}<br>${mw.toFixed(1)} MW
+      </div>`;
   }).join("");
-
   document.getElementById("gen_unidades").innerHTML=html;
 }
 
 // ===== COMPARATIVO =====
-function renderComparativo(hoy,ayer){
+function renderComparativo(actual, anterior){
 
-  if(!ayer){
-    document.getElementById("comparativo").innerHTML="<div class='k'>Sin histórico suficiente</div>";
+  const cont = document.getElementById("comparativo");
+  const titulo = document.getElementById("tituloComparativo");
+
+  if(!anterior){
+    cont.innerHTML = "<div class='k'>Sin histórico</div>";
+    titulo.innerText = "Sin comparativo";
     return;
   }
 
-  function fila(n,h,a){
-    if(!a) return `<div class="k">${n}<br>—</div>`;
-    let diff=h-a;
-    let pct=(diff/a)*100;
-    let col=diff>0?"ok":"bad";
-    let icon=diff>0?"▲":"▼";
+  titulo.innerText = `${actual.fecha} vs ${anterior.fecha}`;
 
+  function fila(n,h,a){
+    let diff=h-a;
+    let pct=a!==0?(diff/a)*100:0;
+    let col=diff>0?"ok":diff<0?"bad":"";
+    let icon=diff>0?"▲":diff<0?"▼":"●";
     return `<div class="k ${col}">
-      ${n}<br>${h}<br><small>${icon} ${pct.toFixed(1)}%</small>
+      ${n}<br>${h.toFixed(1)}
+      <br><small>${icon} ${pct.toFixed(1)}%</small>
     </div>`;
   }
 
-  document.getElementById("comparativo").innerHTML=`
-    ${fila("Demanda",hoy.kpis.demanda_total_MW,ayer.kpis.demanda_total_MW)}
-    ${fila("STN",hoy.kpis.STN,ayer.kpis.STN)}
-    ${fila("Gen",hoy.kpis.generacion_total_MW,ayer.kpis.generacion_total_MW)}
+  cont.innerHTML=`
+    ${fila("Demanda",actual.kpis.demanda_total_MW,anterior.kpis.demanda_total_MW)}
+    ${fila("STN",actual.kpis.STN,anterior.kpis.STN)}
+    ${fila("Gen",actual.kpis.generacion_total_MW,anterior.kpis.generacion_total_MW)}
   `;
 }
 
 // ===== GRAFICO =====
 function renderGrafico(hist){
-
-  if(!hist||hist.length<2) return;
+  if(hist.length<2) return;
 
   const c=document.getElementById("grafico");
   const ctx=c.getContext("2d");
@@ -138,28 +144,25 @@ function renderGrafico(hist){
 
   ctx.clearRect(0,0,c.width,c.height);
 
-  const demanda=hist.map(d=>d.kpis.demanda_total_MW);
-  const gen=hist.map(d=>d.kpis.generacion_total_MW);
+  let dem=hist.map(d=>d.kpis.demanda_total_MW);
+  let gen=hist.map(d=>d.kpis.generacion_total_MW);
 
-  const max=Math.max(...demanda,...gen);
-  const min=Math.min(...demanda,...gen);
-  const rango=max-min||1;
+  let max=Math.max(...dem,...gen);
+  let min=Math.min(...dem,...gen);
+  let rango=max-min||1;
 
-  function drawLine(data,color){
-    ctx.beginPath();
-    ctx.strokeStyle=color;
-
+  function draw(data,color){
+    ctx.beginPath(); ctx.strokeStyle=color;
     data.forEach((v,i)=>{
       let x=i/(data.length-1)*c.width;
       let y=c.height-((v-min)/rango)*c.height;
       i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
-
     ctx.stroke();
   }
 
-  drawLine(demanda,"#FFD100"); // demanda
-  drawLine(gen,"#00c853"); // generación
+  draw(dem,"#FFD100");
+  draw(gen,"#00c853");
 }
 
 // ===== SCADA =====
@@ -177,21 +180,17 @@ function renderSCADA(data){
   let offset=0;
 
   function draw(){
-
     ctx.clearRect(0,0,c.width,c.height);
-
     let cx=c.width/2,cy=c.height/2;
 
-    ctx.fillStyle="#00c853";
-    ctx.beginPath();
-    ctx.arc(cx,cy,10,0,6.28);
-    ctx.fill();
+    ctx.fillStyle="#0f0";
+    ctx.beginPath(); ctx.arc(cx,cy,10,0,6.28); ctx.fill();
 
     function flow(x1,y1,x2,y2,color){
       for(let i=0;i<4;i++){
         let t=(i+offset)%4/4;
-        ctx.fillStyle=color;
         ctx.beginPath();
+        ctx.fillStyle=color;
         ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,3,0,6.28);
         ctx.fill();
       }
@@ -201,25 +200,17 @@ function renderSCADA(data){
       let a=i/trs.length*Math.PI;
       let x=cx+Math.cos(a)*120;
       let y=cy-Math.sin(a)*90;
-
-      let color="lime";
-      if(t.MW>40) color="yellow";
-      if(t.MW>70) color="red";
-
-      ctx.strokeStyle=color;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
-
-      flow(cx,cy,x,y,color);
+      ctx.strokeStyle="lime";
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
+      flow(cx,cy,x,y,"lime");
     });
 
     lns.forEach((l,i)=>{
       let a=i/lns.length*Math.PI+Math.PI;
       let x=cx+Math.cos(a)*150;
       let y=cy-Math.sin(a)*110;
-
       ctx.strokeStyle="#4aa3ff";
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
-
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
       flow(cx,cy,x,y,"#4aa3ff");
     });
 
@@ -234,14 +225,13 @@ function renderSCADA(data){
 function renderAlertas(data){
   let ul=document.getElementById("alertas");
   ul.innerHTML="";
-
   let k=data.kpis;
-
-  if((k.STN||0)/(k.demanda_total_MW||1)>0.7)
-    ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
 
   if(k.generacion_total_MW < k.demanda_total_MW*0.5)
     ul.innerHTML+="<li>🔴 Baja generación</li>";
+
+  if((k.STN)/(k.demanda_total_MW||1)>0.6)
+    ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
 
   if(ul.innerHTML==="")
     ul.innerHTML="<li>🟢 Sistema estable</li>";
@@ -252,38 +242,54 @@ function renderEstado(){
   document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
 }
 
-// ===== CARGA =====
-async function cargarDatos(){
+// ===== SELECTOR =====
+function cargarSelectorFechas(fechas){
+  const select=document.getElementById("selectFecha");
+  select.innerHTML="";
+  fechas.forEach(f=>{
+    let o=document.createElement("option");
+    o.value=f; o.textContent=f;
+    select.appendChild(o);
+  });
+  select.value=fechas.at(-1);
+  select.onchange=()=>cargarPorFecha(select.value,fechas);
+}
 
-  const manifest=await fetch("manifest.json").then(r=>r.json());
+// ===== CARGA POR FECHA =====
+async function cargarPorFecha(fecha,fechas){
 
-  const fechas=manifest.fechas.sort();
+  const data=await fetch("data/"+fecha+".json").then(r=>r.json());
 
-  const hoy_fecha=fechas.at(-1);
+  const index=fechas.indexOf(fecha);
 
-  const hoy=await fetch("data/"+hoy_fecha+".json").then(r=>r.json());
+  let anterior=null;
+  if(index>0){
+    anterior=await fetch("data/"+fechas[index-1]+".json").then(r=>r.json());
+  }
 
-  const hist_raw=await Promise.all(
-    fechas.slice(-7).map(async f=>{
-      try{
-        let r=await fetch("data/"+f+".json");
-        if(!r.ok) return null;
-        return await r.json();
-      }catch{return null;}
-    })
+  let hist_raw=await Promise.all(
+    fechas.slice(Math.max(0,index-6),index+1)
+      .map(f=>fetch("data/"+f+".json").then(r=>r.ok?r.json():null))
   );
 
-  const hist=hist_raw.filter(x=>x&&x.kpis);
+  const hist=hist_raw.filter(x=>x);
 
-  const ayer=hist.length>1?hist.at(-2):null;
-
-  renderKpis(hoy);
-  renderGeneracion(hoy);
-  renderComparativo(hoy,ayer);
+  renderFecha(data);
+  renderKpis(data);
+  renderGeneracion(data);
+  renderComparativo(data,anterior);
   renderGrafico(hist);
-  renderSCADA(hoy);
-  renderAlertas(hoy);
+  renderSCADA(data);
+  renderAlertas(data);
   renderEstado();
+}
+
+// ===== INICIO =====
+async function cargarDatos(){
+  const manifest=await fetch("manifest.json").then(r=>r.json());
+  const fechas=manifest.fechas.sort();
+  cargarSelectorFechas(fechas);
+  await cargarPorFecha(fechas.at(-1),fechas);
 }
 
 cargarDatos();
