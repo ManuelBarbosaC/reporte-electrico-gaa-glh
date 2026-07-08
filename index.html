@@ -9,6 +9,8 @@ body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .card{background:#111e2b;margin:10px;padding:12px;border-radius:10px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .k{background:#0b141f;padding:10px;border-radius:8px;text-align:center}
+.bad{color:#ff1744}
+.ok{color:#00c853}
 canvas{width:100%;height:300px;background:#0a0f1a}
 </style>
 </head>
@@ -44,66 +46,51 @@ canvas{width:100%;height:300px;background:#0a0f1a}
 
 <script>
 
-// ===== ADAPTADOR INTELIGENTE =====
+// 🔥 ADAPTADOR CORRECTO
 function adaptarData(data){
 
-  if(!data.kpis) data.kpis = {};
-
   let totalGen = 0;
-  data.kpis_generacion = {};
 
-  // ✅ CASO NUEVO: viene generacion estructurada
-  if(data.generacion){
-
-    Object.entries(data.generacion).forEach(([grupo, fuentes])=>{
-      Object.entries(fuentes || {}).forEach(([nombre, valor])=>{
-        let mw = Number(valor || 0);
-        totalGen += mw;
-        data.kpis_generacion[nombre] = {potencia_MW: mw};
-      });
-    });
-  }
-
-  // ✅ CASO ALTERNATIVO: usar kpis_generacion directamente si existe
-  else if(data.kpis_generacion){
-
-    Object.entries(data.kpis_generacion).forEach(([k,v])=>{
-      let mw = Number(v.potencia_MW || 0);
-      totalGen += mw;
+  // ✅ USAR kpis_generacion DIRECTO
+  if(data.kpis_generacion){
+    Object.values(data.kpis_generacion).forEach(v=>{
+      totalGen += Number(v.potencia_MW || 0);
     });
   }
 
   data.kpis.generacion_total_MW = totalGen;
-
-  data.kpis.demanda_total_MW = Number(data.kpis.demanda_total_MW || 0);
-  data.kpis.STN = Number(data.kpis.STN || 0);
 
   return data;
 }
 
 // ===== KPIs =====
 function renderKpis(d){
+
+  let dem = Number(d.kpis.demanda_total_MW || 0);
+  let stn = Number(d.kpis.STN || 0);
+  let gen = Number(d.kpis.generacion_total_MW || 0);
+
   document.getElementById("kpis").innerHTML=`
-    <div class="k">Demanda<br>${d.kpis.demanda_total_MW.toFixed(1)}</div>
-    <div class="k">STN<br>${d.kpis.STN.toFixed(1)}</div>
-    <div class="k">Generación<br>${d.kpis.generacion_total_MW.toFixed(1)}</div>
+    <div class="k">Demanda<br>${dem.toFixed(1)}</div>
+    <div class="k">STN<br>${stn.toFixed(1)}</div>
+    <div class="k ${gen<dem?'bad':'ok'}">Generación<br>${gen.toFixed(1)}</div>
   `;
 }
 
 // ===== GENERACION =====
 function renderGeneracion(d){
 
-  let gen = d.kpis_generacion || {};
+  const gen = d.kpis_generacion || {};
 
   if(Object.keys(gen).length===0){
     document.getElementById("gen_unidades").innerHTML =
-      "<div class='k'>⚠ Sin dato de generación</div>";
+      "<div class='k'>Sin datos</div>";
     return;
   }
 
   document.getElementById("gen_unidades").innerHTML =
     Object.entries(gen).map(([k,v])=>{
-      return `<div class="k">${k}<br>${v.potencia_MW}</div>`;
+      return `<div class="k">${k}<br>${v.potencia_MW.toFixed(1)} MW</div>`;
     }).join("");
 }
 
@@ -116,15 +103,15 @@ function renderComparativo(h,a){
     return;
   }
 
-  function b(n,x,y){
+  function box(n,x,y){
     let d=x-y;
-    return `<div class="k">${n}<br>${x} (${d})</div>`;
+    return `<div class="k">${n}<br>${x.toFixed(1)} (${d.toFixed(1)})</div>`;
   }
 
   document.getElementById("comparativo").innerHTML = `
-    ${b("Dem",h.kpis.demanda_total_MW,a.kpis.demanda_total_MW)}
-    ${b("STN",h.kpis.STN,a.kpis.STN)}
-    ${b("Gen",h.kpis.generacion_total_MW,a.kpis.generacion_total_MW)}
+    ${box("Demanda",h.kpis.demanda_total_MW,a.kpis.demanda_total_MW)}
+    ${box("STN",h.kpis.STN,a.kpis.STN)}
+    ${box("Gen",h.kpis.generacion_total_MW,a.kpis.generacion_total_MW)}
   `;
 }
 
@@ -161,14 +148,24 @@ function renderGrafico(hist){
 
   draw(dem,"#FFD100");
   draw(gen,"#00c853");
+
+  // déficit
+  for(let i=0;i<dem.length;i++){
+    if(dem[i]>gen[i]){
+      ctx.fillStyle="rgba(255,0,0,0.3)";
+      ctx.fillRect(x(i)-5,y(dem[i]),10,y(gen[i])-y(dem[i]));
+    }
+  }
 }
 
 // ===== ALERTAS =====
 function renderAlertas(d){
+
   let ul=document.getElementById("alertas");
   ul.innerHTML="";
+
   if(d.kpis.generacion_total_MW < d.kpis.demanda_total_MW)
-    ul.innerHTML+="<li>🔴 Déficit</li>";
+    ul.innerHTML+="<li>🔴 Déficit energético</li>";
 }
 
 // ===== MAIN =====
@@ -188,22 +185,23 @@ async function cargar(){
 
 async function cargarPorFecha(f,fechas){
 
-  let d=adaptarData(await fetch("data/"+f+".json").then(r=>r.json()));
+  let d = adaptarData(await fetch("data/"+f+".json").then(r=>r.json()));
 
   const orden=[...fechas].sort((a,b)=>new Date(a)-new Date(b));
   const i=orden.indexOf(f);
 
   let a=null;
+
   if(i>0){
-    a=adaptarData(await fetch("data/"+orden[i-1]+".json").then(r=>r.json()));
+    a = adaptarData(await fetch("data/"+orden[i-1]+".json").then(r=>r.json()));
   }
 
-  let hist=await Promise.all(
+  let hist = await Promise.all(
     orden.slice(Math.max(0,i-6),i+1)
-    .map(x=>fetch("data/"+x+".json").then(r=>r.json()).then(adaptarData))
+      .map(x=>fetch("data/"+x+".json").then(r=>r.json()).then(adaptarData))
   );
 
-  document.getElementById("fechaActual").innerText = f;
+  document.getElementById("fechaActual").innerText=f;
 
   renderKpis(d);
   renderGeneracion(d);
