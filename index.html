@@ -226,15 +226,18 @@ async function cargarPorFecha(f,fechas){
 
   let data=await fetch("data/"+f+".json").then(r=>r.json());
 
-  let idx=fechas.indexOf(f);
+  const fechasOrdenadas = [...fechas].sort((a,b)=> new Date(a) - new Date(b));
+  const idx = fechasOrdenadas.indexOf(f);
+
   let ant=null;
 
   if(idx>0){
-    ant=await fetch("data/"+fechas[idx-1]+".json").then(r=>r.json());
+    const fechaAnterior = fechasOrdenadas[idx-1];
+    ant = await fetch("data/"+fechaAnterior+".json").then(r=>r.json());
   }
 
-  let hist=await Promise.all(
-    fechas.slice(Math.max(0,idx-6),idx+1)
+  let hist = await Promise.all(
+    fechasOrdenadas.slice(Math.max(0,idx-6),idx+1)
     .map(x=>fetch("data/"+x+".json").then(r=>r.json()))
   );
 
