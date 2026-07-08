@@ -7,12 +7,15 @@
 <style>
 body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .card{background:#111e2b;margin:10px;padding:12px;border-radius:10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .k{background:#0b141f;padding:10px;border-radius:8px;text-align:center}
-.bad{color:#ff1744}
 .ok{color:#00c853}
-canvas{width:100%;height:300px;background:#0a0f1a}
+.bad{color:#ff1744}
+.warn{color:#ffd600}
+canvas{width:100%;height:320px;background:#0a0f1a}
+small{opacity:0.7}
 </style>
+
 </head>
 
 <body>
@@ -28,189 +31,222 @@ canvas{width:100%;height:300px;background:#0a0f1a}
 <div id="kpis" class="grid"></div>
 </div>
 
-<div class="card">
-<div id="gen_unidades" class="grid"></div>
-</div>
+<div class="card"><h3>Generación por unidad</h3>
+<div id="gen"></div></div>
 
-<div class="card">
-<div id="comparativo" class="grid"></div>
-</div>
+<div class="card"><h3>Comparativo unidades</h3>
+<div id="gen_comp" class="grid"></div></div>
 
-<div class="card">
-<canvas id="grafico"></canvas>
-</div>
+<div class="card"><h3>Comparativo transformadores</h3>
+<div id="trs_comp" class="grid"></div></div>
 
-<div class="card">
-<ul id="alertas"></ul>
-</div>
+<div class="card"><h3>Comparativo líneas</h3>
+<div id="lin_comp" class="grid"></div></div>
+
+<div class="card"><h3>Histórico</h3>
+<canvas id="chart"></canvas></div>
 
 <script>
 
-// 🔥 ADAPTADOR CORRECTO
-function adaptarData(data){
+// ===== UTIL =====
+const n = v => Number(v)||0
 
-  let totalGen = 0;
-
-  // ✅ USAR kpis_generacion DIRECTO
-  if(data.kpis_generacion){
-    Object.values(data.kpis_generacion).forEach(v=>{
-      totalGen += Number(v.potencia_MW || 0);
-    });
-  }
-
-  data.kpis.generacion_total_MW = totalGen;
-
-  return data;
+function trend(h,a){
+ let d=h-a
+ let pct=a?d/a*100:0
+ let icon="●",c=""
+ if(d>0){icon="▲";c="ok"}
+ if(d<0){icon="▼";c="bad"}
+ return `${icon} ${pct.toFixed(1)}%`
 }
 
-// ===== KPIs =====
+// ===== ADAPTAR =====
+function adapt(d){
+
+ let gen=0
+
+ Object.values(d.kpis_generacion||{}).forEach(v=>{
+   gen+=n(v.potencia_MW)
+ })
+
+ d.kpis.gen=gen
+ d.kpis.dem=n(d.kpis.demanda_total_MW)
+ d.kpis.stn=n(d.kpis.STN)
+
+ return d
+}
+
+// ===== KPIS =====
 function renderKpis(d){
 
-  let dem = Number(d.kpis.demanda_total_MW || 0);
-  let stn = Number(d.kpis.STN || 0);
-  let gen = Number(d.kpis.generacion_total_MW || 0);
-
-  document.getElementById("kpis").innerHTML=`
-    <div class="k">Demanda<br>${dem.toFixed(1)}</div>
-    <div class="k">STN<br>${stn.toFixed(1)}</div>
-    <div class="k ${gen<dem?'bad':'ok'}">Generación<br>${gen.toFixed(1)}</div>
-  `;
+ document.getElementById("kpis").innerHTML=`
+ <div class="k">Demanda<br>${d.kpis.dem}</div>
+ <div class="k">STN<br>${d.kpis.stn}</div>
+ <div class="k">Gen<br>${d.kpis.gen}</div>`
 }
 
 // ===== GENERACION =====
-function renderGeneracion(d){
+function renderGen(d){
 
-  const gen = d.kpis_generacion || {};
+ let g=d.kpis_generacion||{}
 
-  if(Object.keys(gen).length===0){
-    document.getElementById("gen_unidades").innerHTML =
-      "<div class='k'>Sin datos</div>";
-    return;
-  }
-
-  document.getElementById("gen_unidades").innerHTML =
-    Object.entries(gen).map(([k,v])=>{
-      return `<div class="k">${k}<br>${v.potencia_MW.toFixed(1)} MW</div>`;
-    }).join("");
+ document.getElementById("gen").innerHTML=
+ Object.entries(g).map(([k,v])=>{
+   return `<div class="k">${k}<br>${n(v.potencia_MW)}</div>`
+ }).join("")
 }
 
-// ===== COMPARATIVO =====
-function renderComparativo(h,a){
+// ===== COMPARATIVO GENERACION =====
+function cmpGen(h,a){
 
-  if(!a){
-    document.getElementById("comparativo").innerHTML =
-      "<div class='k'>Sin histórico</div>";
-    return;
-  }
+ let out=document.getElementById("gen_comp")
 
-  function box(n,x,y){
-    let d=x-y;
-    return `<div class="k">${n}<br>${x.toFixed(1)} (${d.toFixed(1)})</div>`;
-  }
+ let keys=new Set([...Object.keys(h.kpis_generacion||{}),
+                   ...Object.keys(a.kpis_generacion||{})])
 
-  document.getElementById("comparativo").innerHTML = `
-    ${box("Demanda",h.kpis.demanda_total_MW,a.kpis.demanda_total_MW)}
-    ${box("STN",h.kpis.STN,a.kpis.STN)}
-    ${box("Gen",h.kpis.generacion_total_MW,a.kpis.generacion_total_MW)}
-  `;
+ out.innerHTML=[...keys].map(k=>{
+   let hv=n(h.kpis_generacion[k]?.potencia_MW)
+   let av=n(a.kpis_generacion[k]?.potencia_MW)
+
+   return `<div class="k">
+   ${k}<br>${hv}
+   <br><small>${trend(hv,av)}</small>
+   </div>`
+ }).join("")
+}
+
+// ===== COMPARATIVO RED =====
+function mapList(l){
+ let o={}
+ l.forEach(x=>o[x.nombre]=n(x.MW))
+ return o
+}
+
+function cmpList(h,a,id){
+
+ let box=document.getElementById(id)
+
+ let H=mapList(h)
+ let A=mapList(a)
+
+ let keys=new Set([...Object.keys(H),...Object.keys(A)])
+
+ box.innerHTML=[...keys].map(k=>{
+   let hv=n(H[k])
+   let av=n(A[k])
+
+   return `<div class="k">
+   ${k}<br>${hv}
+   <br><small>${trend(hv,av)}</small>
+   </div>`
+ }).join("")
 }
 
 // ===== GRAFICO =====
-function renderGrafico(hist){
+function plot(hist){
 
-  if(hist.length<2) return;
+ let c=document.getElementById("chart")
+ let ctx=c.getContext("2d")
 
-  let c=document.getElementById("grafico");
-  let ctx=c.getContext("2d");
+ c.width=c.offsetWidth
+ c.height=320
 
-  c.width=c.offsetWidth;
+ let dem=hist.map(x=>x.kpis.dem)
+ let gen=hist.map(x=>x.kpis.gen)
 
-  let dem=hist.map(x=>x.kpis.demanda_total_MW);
-  let gen=hist.map(x=>x.kpis.generacion_total_MW);
+ let max=Math.max(...dem,...gen)
+ let min=Math.min(...dem,...gen)
+ let r=max-min||1
 
-  let max=Math.max(...dem,...gen);
-  let min=Math.min(...dem,...gen);
-  let r=max-min||1;
+ let m={l:50,b:30}
 
-  let x=i=>i/(hist.length-1)*c.width;
-  let y=v=>300-(v-min)/r*300;
+ let x=i=>m.l+i/(hist.length-1)*(c.width-m.l-10)
+ let y=v=>c.height-m.b-(v-min)/r*(c.height-m.b)
 
-  ctx.clearRect(0,0,c.width,300);
+ ctx.clearRect(0,0,c.width,c.height)
 
-  function draw(arr,color){
-    ctx.beginPath(); ctx.strokeStyle=color;
-    arr.forEach((v,i)=>{
-      let px=x(i),py=y(v);
-      i?ctx.lineTo(px,py):ctx.moveTo(px,py);
-    });
-    ctx.stroke();
-  }
+ // eje Y
+ for(let i=0;i<5;i++){
+   let val=min+r/4*i
+   let yy=y(val)
+   ctx.fillText(val.toFixed(0),5,yy)
+ }
 
-  draw(dem,"#FFD100");
-  draw(gen,"#00c853");
+ // eje X
+ hist.forEach((d,i)=>{
+   ctx.fillText(d.fecha.slice(5),x(i)-15,c.height)
+ })
 
-  // déficit
-  for(let i=0;i<dem.length;i++){
-    if(dem[i]>gen[i]){
-      ctx.fillStyle="rgba(255,0,0,0.3)";
-      ctx.fillRect(x(i)-5,y(dem[i]),10,y(gen[i])-y(dem[i]));
-    }
-  }
-}
+ // lineas
+ function draw(arr,col){
+   ctx.beginPath()
+   ctx.strokeStyle=col
+   arr.forEach((v,i)=>{
+     i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v))
+   })
+   ctx.stroke()
+ }
 
-// ===== ALERTAS =====
-function renderAlertas(d){
+ draw(dem,"#FFD100")
+ draw(gen,"#00c853")
 
-  let ul=document.getElementById("alertas");
-  ul.innerHTML="";
-
-  if(d.kpis.generacion_total_MW < d.kpis.demanda_total_MW)
-    ul.innerHTML+="<li>🔴 Déficit energético</li>";
+ // deficit
+ for(let i=0;i<dem.length;i++){
+   if(dem[i]>gen[i]){
+     ctx.fillStyle="rgba(255,0,0,0.3)"
+     ctx.fillRect(x(i)-4,y(dem[i]),8,y(gen[i])-y(dem[i]))
+   }
+ }
 }
 
 // ===== MAIN =====
-async function cargar(){
+async function run(){
 
-  const m=await fetch("manifest.json").then(r=>r.json());
-  const fechas=m.fechas.sort((a,b)=>new Date(a)-new Date(b));
+ let m=await fetch("manifest.json").then(r=>r.json())
+ let f=m.fechas.sort((a,b)=>new Date(a)-new Date(b))
 
-  document.getElementById("inputFecha").value = fechas.at(-1);
+ document.getElementById("inputFecha").value=f.at(-1)
 
-  cargarPorFecha(fechas.at(-1),fechas);
+ document.getElementById("inputFecha").onchange=e=>{
+   load(e.target.value,f)
+ }
 
-  document.getElementById("inputFecha").onchange=e=>{
-    cargarPorFecha(e.target.value,fechas);
-  };
+ load(f.at(-1),f)
 }
 
-async function cargarPorFecha(f,fechas){
+async function load(fecha,f){
 
-  let d = adaptarData(await fetch("data/"+f+".json").then(r=>r.json()));
+ let d=adapt(await fetch("data/"+fecha+".json").then(r=>r.json()))
 
-  const orden=[...fechas].sort((a,b)=>new Date(a)-new Date(b));
-  const i=orden.indexOf(f);
+ let i=f.indexOf(fecha)
+ let a=i>0?adapt(await fetch("data/"+f[i-1]+".json").then(r=>r.json())):null
 
-  let a=null;
+ let hist=await Promise.all(
+   f.slice(Math.max(0,i-6),i+1)
+    .map(x=>fetch("data/"+x+".json")
+    .then(r=>r.json()).then(adapt))
+ )
 
-  if(i>0){
-    a = adaptarData(await fetch("data/"+orden[i-1]+".json").then(r=>r.json()));
-  }
+ document.getElementById("fechaActual").innerText=fecha
 
-  let hist = await Promise.all(
-    orden.slice(Math.max(0,i-6),i+1)
-      .map(x=>fetch("data/"+x+".json").then(r=>r.json()).then(adaptarData))
-  );
+ renderKpis(d)
+ renderGen(d)
+ if(a){
+   cmpGen(d,a)
 
-  document.getElementById("fechaActual").innerText=f;
+   cmpList(d.sistema_electrico.transformadores,
+           a.sistema_electrico.transformadores,
+           "trs_comp")
 
-  renderKpis(d);
-  renderGeneracion(d);
-  renderComparativo(d,a);
-  renderGrafico(hist);
-  renderAlertas(d);
+   cmpList(d.sistema_electrico.lineas,
+           a.sistema_electrico.lineas,
+           "lin_comp")
+ }
+
+ plot(hist)
 }
 
-cargar();
+run()
 
 </script>
 
