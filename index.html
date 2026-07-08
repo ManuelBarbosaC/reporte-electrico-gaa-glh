@@ -350,20 +350,32 @@ Tu lógica de comparación sí está casi bien, pero hay un fallo clave:
 
 
 JavaScript
-const fechasOrdenadas = [...fechas].sort();
-👉 Esto desordena mal las fechas porque:
-.sort() ordena como texto ❌
-NO como fechas reales ❌
-Ejemplo:
-2026-07-10
-2026-07-2  ❌ (queda mal ordenado)
-👉 Entonces:
-index no corresponde ❌
-fecha anterior incorrecta ❌
-no hay comparativo ❌
-✅ ✅ SOLUCIÓN DEFINITIVA (LA QUE TE VA A FUNCIONAR)
-🔥 ✅ REEMPLAZA COMPLETO ESTE BLOQUE
-Busca este bloque en tu cargarPorFecha:
+
+// ✅ ordenar FECHAS REALES (no texto)
+const fechasOrdenadas = [...fechas].sort((a,b)=> new Date(a) - new Date(b));
+
+// ✅ índice correcto
+const index = fechasOrdenadas.indexOf(fecha);
+
+let anterior = null;
+
+// ✅ buscar anterior REAL
+if(index > 0){
+
+  const fechaAnterior = fechasOrdenadas[index - 1];
+
+  try {
+    const resp = await fetch("data/" + fechaAnterior + ".json");
+
+    if(resp.ok){
+      anterior = await resp.json();
+    }
+
+  } catch(e){
+    anterior = null;
+  }
+}
+
 
 
 
@@ -407,7 +419,7 @@ Tienes esto:
 
 
 JavaScript
-fechas.slice(Math.max(0,index-6),index+1)
+fechasOrdenadas.slice(Math.max(0,index-6),index+1)
 👉 ese index YA NO corresponde (porque cambiaste array)
 ✅ CAMBIA POR:
 
