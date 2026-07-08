@@ -36,18 +36,13 @@ h3{margin-top:0}
 </div>
 
 <div class="card">
-<h3 id="tituloComparativo">📊 Comparativo</h3>
+<h3>📊 Comparativo</h3>
 <div id="comparativo" class="grid"></div>
 </div>
 
 <div class="card">
-<h3>📈 Histórico (Demanda vs Generación)</h3>
+<h3>📈 Histórico</h3>
 <canvas id="grafico"></canvas>
-</div>
-
-<div class="card">
-<h3>🖥️ SCADA</h3>
-<canvas id="scada"></canvas>
 </div>
 
 <div class="card">
@@ -55,45 +50,217 @@ h3{margin-top:0}
 <ul id="alertas"></ul>
 </div>
 
-<div class="card">
-<h3>Estado</h3>
-<div id="estadoSistema"></div>
-</div>
-
 <script>
 
-// ✅ ADAPTADOR ROBUSTO
+// ===== ADAPTADOR SEGURO =====
 function adaptarData(data){
 
-  if(!data.kpis) data.kpis = {};
+  try{
 
-  let totalGen = 0;
-  data.kpis_generacion = {};
+    if(!data.kpis) data.kpis={};
 
-  if(data.generacion){
-    Object.entries(data.generacion).forEach(([grupo, fuentes])=>{
-      Object.entries(fuentes).forEach(([nombre, valor])=>{
-        let mw = Number(valor || 0);
-        totalGen += mw;
+    let totalGen = 0;
+    data.kpis_generacion = {};
 
-        data.kpis_generacion[nombre] = {
-          potencia_MW: mw,
-          tipo: grupo
-        };
+    if(data.generacion){
+      Object.entries(data.generacion).forEach(([grupo, fuentes])=>{
+        Object.entries(fuentes||{}).forEach(([nombre, valor])=>{
+          let mw = Number(valor || 0);
+          totalGen += mw;
+          data.kpis_generacion[nombre] = {potencia_MW: mw};
+        });
       });
-    });
+    }
+
+    data.kpis.generacion_total_MW = totalGen;
+    data.kpis.demanda_total_MW = Number(data.kpis.demanda_total_MW || 0);
+    data.kpis.STN = Number(data.kpis.STN || 0);
+
+  }catch(e){
+    console.error("Error adaptando:", e);
   }
-
-  data.kpis.generacion_total_MW = totalGen;
-
-  // fallback seguro
-  data.kpis.demanda_total_MW = Number(data.kpis.demanda_total_MW || 0);
-  data.kpis.STN = Number(data.kpis.STN || 0);
 
   return data;
 }
 
-// ===== KPIs =====
+// ===== KPIS =====
 function renderKpis(d){
+
+  let dem = Number(d.kpis?.demanda_total_MW || 0);
+  let stn = Number(d.kpis?.STN || 0);
+  let gen = Number(d.kpis?.generacion_total_MW || 0);
+
   document.getElementById("kpis").innerHTML=`
-    <div class="k">Demanda<br>${d.kpis.demanda_total_MW.toFixed(1)}</div>
+    <div class="k">Demanda<br>${dem.toFixed(1)}</div>
+    <div class="k">STN<br>${stn.toFixed(1)}</div>
+    <div class="k">Generación<br>${gen.toFixed(1)}</div>
+  `;
+}
+
+// ===== GENERACIÓN =====
+function renderGeneracion(data){
+
+  const gen=data.kpis_generacion || {};
+
+  if(Object.keys(gen).length===0){
+    document.getElementById("gen_unidades").innerHTML =
+      "<div class='k'>Sin datos</div>";
+    return;
+  }
+
+  document.getElementById("gen_unidades").innerHTML =
+    Object.entries(gen).map(([k,v])=>{
+      let mw=Number(v.potencia_MW||0);
+      return `<div class="k">${k}<br>${mw.toFixed(1)} MW</div>`;
+    }).join("");
+}
+
+// ===== COMPARATIVO =====
+function renderComparativo(h,a){
+
+  const cont=document.getElementById("comparativo");
+
+  if(!a){
+    cont.innerHTML="<div class='k'>Sin histórico</div>";
+    return;
+  }
+
+  function box(n,x,y){
+    let d=x-y;
+    let c=d>0?"ok":d<0?"bad":"";
+    return `<div class="k ${c}">${n}<br>${x.toFixed(1)} (${d.toFixed(1)})</div>`;
+  }
+
+  cont.innerHTML=`
+    ${box("Demanda",h.kpis.demanda_total_MW,a.kpis.demanda_total_MW)}
+    ${box("STN",h.kpis.STN,a.kpis.STN)}
+    ${box("Gen",h.kpis.generacion_total_MW,a.kpis.generacion_total_MW)}
+  `;
+}
+
+// ===== GRÁFICO =====
+function renderGrafico(hist){
+
+  if(!hist || hist.length<2) return;
+
+  const c=document.getElementById("grafico");
+  const ctx=c.getContext("2d");
+
+  c.width=c.offsetWidth;
+  c.height=300;
+
+  const dem=hist.map(d=>Number(d.kpis?.demanda_total_MW||0));
+  const gen=hist.map(d=>Number(d.kpis?.generacion_total_MW||0));
+
+  const max=Math.max(...dem,...gen);
+  const min=Math.min(...dem,...gen);
+  const r=max-min||1;
+
+  const x=i=>i/(hist.length-1)*c.width;
+  const y=v=>300-(v-min)/r*300;
+
+  ctx.clearRect(0,0,c.width,300);
+
+  function draw(arr,color){
+    ctx.beginPath(); ctx.strokeStyle=color;
+    arr.forEach((v,i)=>{
+      let px=x(i),py=y(v);
+      i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    });
+    ctx.stroke();
+  }
+
+  draw(dem,"#FFD100");
+  draw(gen,"#00c853");
+}
+
+// ===== ALERTAS =====
+function renderAlertas(d){
+
+  let ul=document.getElementById("alertas");
+  ul.innerHTML="";
+
+  if((d.kpis.generacion_total_MW||0) < (d.kpis.demanda_total_MW||0))
+    ul.innerHTML+="<li>🔴 Déficit energético</li>";
+
+  if(!ul.innerHTML)
+    ul.innerHTML="<li>🟢 Sistema estable</li>";
+}
+
+// ===== MAIN =====
+async function cargar(){
+
+  try{
+
+    const m = await fetch("manifest.json");
+    if(!m.ok) throw "No carga manifest";
+
+    const manifest = await m.json();
+
+    const fechas = (manifest.fechas||[]).sort((a,b)=>new Date(a)-new Date(b));
+
+    if(fechas.length===0){
+      console.error("Sin fechas");
+      return;
+    }
+
+    document.getElementById("inputFecha").value = fechas.at(-1);
+
+    cargarPorFecha(fechas.at(-1),fechas);
+
+    document.getElementById("inputFecha").onchange = e=>{
+      cargarPorFecha(e.target.value,fechas);
+    };
+
+  }catch(e){
+    console.error("Error cargar:", e);
+  }
+}
+
+async function cargarPorFecha(f,fechas){
+
+  try{
+
+    let resp = await fetch("data/"+f+".json");
+    if(!resp.ok) throw "Error JSON";
+
+    let d = adaptarData(await resp.json());
+
+    const orden=[...fechas].sort((a,b)=>new Date(a)-new Date(b));
+    const i=orden.indexOf(f);
+
+    let a=null;
+
+    if(i>0){
+      let r2 = await fetch("data/"+orden[i-1]+".json");
+      if(r2.ok){
+        a = adaptarData(await r2.json());
+      }
+    }
+
+    let hist = await Promise.all(
+      orden.slice(Math.max(0,i-6),i+1)
+      .map(x=>fetch("data/"+x+".json")
+      .then(r=>r.json())
+      .then(adaptarData))
+    );
+
+    document.getElementById("fechaActual").innerText = d.fecha;
+
+    renderKpis(d);
+    renderGeneracion(d);
+    renderComparativo(d,a);
+    renderGrafico(hist);
+    renderAlertas(d);
+
+  }catch(e){
+    console.error("Error fecha:", e);
+  }
+}
+
+cargar();
+
+</script>
+
+</body>
+</html>
