@@ -9,7 +9,7 @@ body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .card{background:#111e2b;margin:10px;padding:12px;border-radius:10px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .k{background:#0b141f;padding:10px;border-radius:8px;text-align:center}
-.ok{color:#00c853}.warn{color:#ffd600}.bad{color:#ff1744}
+.ok{color:#00c853} .warn{color:#ffd600} .bad{color:#ff1744}
 canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
 h3{margin-top:0}
 </style>
@@ -41,7 +41,7 @@ h3{margin-top:0}
 </div>
 
 <div class="card">
-<h3>📈 Histórico</h3>
+<h3>📈 Histórico (Demanda vs Generación)</h3>
 <canvas id="grafico"></canvas>
 </div>
 
@@ -65,22 +65,16 @@ h3{margin-top:0}
 // ===== ADAPTADOR JSON =====
 function adaptarData(data){
 
-  // total generación
   let totalGen = 0;
-
   if(data.generacion){
-    Object.values(data.generacion).forEach(grupo=>{
-      totalGen += Object.values(grupo).reduce((a,v)=>a+Number(v||0),0);
+    Object.values(data.generacion).forEach(g=>{
+      totalGen += Object.values(g).reduce((a,v)=>a+Number(v||0),0);
     });
   }
 
-  // crear formato esperado
-  data.kpis.demanda_total_MW = Number(data.kpis.demanda_total_MW || 0);
   data.kpis.generacion_total_MW = totalGen;
 
-  // generar kpis_generacion
   data.kpis_generacion = {};
-
   if(data.generacion?.termica){
     Object.entries(data.generacion.termica).forEach(([k,v])=>{
       data.kpis_generacion[k] = {potencia_MW:Number(v||0)};
@@ -90,55 +84,38 @@ function adaptarData(data){
   return data;
 }
 
-// ===== RENDER =====
-function renderFecha(data){
-  document.getElementById("fechaActual").innerText = data.fecha;
-}
-
-function renderKpis(data){
-  const d=data.kpis;
-
+// ===== KPIs =====
+function renderKpis(d){
   document.getElementById("kpis").innerHTML=`
-    <div class="k">Demanda<br>${d.demanda_total_MW.toFixed(1)} MW</div>
-    <div class="k">STN<br>${d.STN.toFixed(1)} MW</div>
-    <div class="k">Generación<br>${d.generacion_total_MW.toFixed(1)} MW</div>
+    <div class="k">Demanda<br>${d.kpis.demanda_total_MW.toFixed(1)}</div>
+    <div class="k">STN<br>${d.kpis.STN.toFixed(1)}</div>
+    <div class="k">Generación<br>${d.kpis.generacion_total_MW.toFixed(1)}</div>
   `;
 }
 
+// ===== GENERACIÓN =====
 function renderGeneracion(data){
-
   const gen=data.kpis_generacion;
-
-  const html=Object.entries(gen).map(([k,v])=>{
-
-    let mw=Number(v.potencia_MW||0);
-
-    let c="ok";
-    if(mw===0) c="bad";
-    if(mw>50) c="warn";
-
-    return `<div class="k ${c}">${k}<br>${mw.toFixed(1)} MW</div>`;
-  }).join("");
-
-  document.getElementById("gen_unidades").innerHTML=html;
+  document.getElementById("gen_unidades").innerHTML =
+    Object.entries(gen).map(([k,v])=>{
+      let mw=Number(v.potencia_MW||0);
+      return `<div class="k">${k}<br>${mw.toFixed(1)} MW</div>`;
+    }).join("");
 }
 
+// ===== COMPARATIVO =====
 function renderComparativo(h,a){
 
   const cont=document.getElementById("comparativo");
-  const titulo=document.getElementById("tituloComparativo");
 
   if(!a){
     cont.innerHTML="<div class='k'>Sin histórico</div>";
     return;
   }
 
-  titulo.innerText=`${h.fecha} vs ${a.fecha}`;
-
   function box(n,x,y){
     let d=x-y;
-    let c=d>0?"ok":d<0?"bad":"";
-    return `<div class="k ${c}">${n}<br>${x.toFixed(1)} (${d.toFixed(1)})</div>`;
+    return `<div class="k">${n}<br>${x.toFixed(1)} (${d.toFixed(1)})</div>`;
   }
 
   cont.innerHTML=`
@@ -148,7 +125,7 @@ function renderComparativo(h,a){
   `;
 }
 
-// ===== GRAFICO =====
+// ===== GRAFICO CON EJES =====
 function renderGrafico(hist){
 
   if(hist.length<2) return;
@@ -157,6 +134,7 @@ function renderGrafico(hist){
   const ctx=c.getContext("2d");
 
   c.width=c.offsetWidth;
+  c.height=300;
 
   const dem=hist.map(d=>d.kpis.demanda_total_MW);
   const gen=hist.map(d=>d.kpis.generacion_total_MW);
@@ -165,11 +143,45 @@ function renderGrafico(hist){
   const min=Math.min(...dem,...gen);
   const r=max-min||1;
 
-  const x=i=>i/(hist.length-1)*c.width;
-  const y=v=>300-(v-min)/r*300;
+  const m={left:50,bottom:30};
 
-  ctx.clearRect(0,0,c.width,300);
+  const x=i=>m.left + i/(hist.length-1)*(c.width-m.left-10);
+  const y=v=>c.height-m.bottom - ((v-min)/r)*(c.height-m.bottom-10);
 
+  ctx.clearRect(0,0,c.width,c.height);
+
+  // ===== EJE Y =====
+  ctx.strokeStyle="#555";
+  ctx.beginPath();
+  ctx.moveTo(m.left,0);
+  ctx.lineTo(m.left,c.height-m.bottom);
+  ctx.stroke();
+
+  ctx.fillStyle="#aaa";
+  ctx.font="10px Arial";
+
+  for(let i=0;i<=4;i++){
+    let val=min+(r/4)*i;
+    let yy=y(val);
+    ctx.fillText(val.toFixed(0),5,yy);
+    ctx.beginPath();
+    ctx.moveTo(m.left-5,yy);
+    ctx.lineTo(m.left,yy);
+    ctx.stroke();
+  }
+
+  // ===== EJE X =====
+  ctx.beginPath();
+  ctx.moveTo(m.left,c.height-m.bottom);
+  ctx.lineTo(c.width,c.height-m.bottom);
+  ctx.stroke();
+
+  hist.forEach((d,i)=>{
+    let xx=x(i);
+    ctx.fillText(d.fecha.slice(5),xx-15,c.height-5);
+  });
+
+  // ===== LINEAS =====
   function draw(arr,color){
     ctx.beginPath(); ctx.strokeStyle=color;
     arr.forEach((v,i)=>{
@@ -182,7 +194,7 @@ function renderGrafico(hist){
   draw(dem,"#FFD100");
   draw(gen,"#00c853");
 
-  // déficit
+  // ===== DEFICIT =====
   for(let i=0;i<dem.length;i++){
     if(dem[i]>gen[i]){
       ctx.fillStyle="rgba(255,0,0,0.3)";
@@ -191,89 +203,54 @@ function renderGrafico(hist){
   }
 }
 
-// ===== SCADA SIMPLE =====
-function renderSCADA(data){
-
-  const c=document.getElementById("scada");
-  const ctx=c.getContext("2d");
-
-  c.width=c.offsetWidth;
-
-  ctx.clearRect(0,0,c.width,300);
-
-  ctx.fillStyle="lime";
-  ctx.beginPath();
-  ctx.arc(c.width/2,150,10,0,6.28);
-  ctx.fill();
-}
-
 // ===== ALERTAS =====
-function renderAlertas(data){
-
-  let k=data.kpis;
+function renderAlertas(d){
   let ul=document.getElementById("alertas");
   ul.innerHTML="";
-
-  if(k.generacion_total_MW < k.demanda_total_MW)
+  if(d.kpis.generacion_total_MW < d.kpis.demanda_total_MW)
     ul.innerHTML+="<li>🔴 Déficit energético</li>";
-
-  if((k.STN)/(k.demanda_total_MW||1)>0.6)
-    ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
-
-  if(ul.innerHTML==="")
-    ul.innerHTML="<li>🟢 Sistema estable</li>";
-}
-
-function renderEstado(){
-  document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
 }
 
 // ===== MAIN =====
 async function cargar(){
 
-  const manifest=await fetch("manifest.json").then(r=>r.json());
+  const m=await fetch("manifest.json").then(r=>r.json());
+  const fechas=m.fechas.sort((a,b)=> new Date(a)-new Date(b));
 
-  const fechas=manifest.fechas.sort((a,b)=> new Date(a)-new Date(b));
-
-  const input=document.getElementById("inputFecha");
-
-  input.value=fechas.at(-1);
-
-  input.onchange=()=>cargarPorFecha(input.value,fechas);
+  document.getElementById("inputFecha").value=fechas.at(-1);
 
   cargarPorFecha(fechas.at(-1),fechas);
+
+  document.getElementById("inputFecha").onchange=e=>{
+    cargarPorFecha(e.target.value,fechas);
+  };
 }
 
-async function cargarPorFecha(fecha,fechas){
+async function cargarPorFecha(f,fechas){
 
-  const resp=await fetch("data/"+fecha+".json");
-  let data=await resp.json();
+  let d=await fetch("data/"+f+".json").then(r=>r.json());
+  d=adaptarData(d);
 
-  data = adaptarData(data);
+  const orden=[...fechas].sort((a,b)=> new Date(a)-new Date(b));
+  const i=orden.indexOf(f);
 
-  const fechasOrdenadas=[...fechas].sort((a,b)=> new Date(a)-new Date(b));
-  const idx=fechasOrdenadas.indexOf(fecha);
-
-  let ant=null;
-
-  if(idx>0){
-    ant=await fetch("data/"+fechasOrdenadas[idx-1]+".json").then(r=>r.json());
-    ant=adaptarData(ant);
+  let a=null;
+  if(i>0){
+    a=await fetch("data/"+orden[i-1]+".json").then(r=>r.json());
+    a=adaptarData(a);
   }
 
-  const hist=await Promise.all(
-    fechasOrdenadas.slice(Math.max(0,idx-6),idx+1)
-    .map(f=>fetch("data/"+f+".json").then(r=>r.json()).then(adaptarData))
+  let hist=await Promise.all(
+    orden.slice(Math.max(0,i-6),i+1).map(x=>
+      fetch("data/"+x+".json").then(r=>r.json()).then(adaptarData)
+    )
   );
 
-  renderFecha(data);
-  renderKpis(data);
-  renderGeneracion(data);
-  renderComparativo(data,ant);
+  renderKpis(d);
+  renderGeneracion(d);
+  renderComparativo(d,a);
   renderGrafico(hist);
-  renderSCADA(data);
-  renderAlertas(data);
-  renderEstado();
+  renderAlertas(d);
 }
 
 cargar();
