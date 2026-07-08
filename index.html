@@ -34,6 +34,20 @@ h3{margin-top:0}
 <div id="kpis" class="grid"></div>
 </div>
 
+
+<div class="card">
+<h3>⚡ Cargas por Gerencia</h3>
+
+<select id="selectGerencia">
+  <option value="GDT">GDT</option>
+  <option value="GCH">GCH</option>
+  <option value="GDA">GDA</option>
+  <option value="GLC">GLC</option>
+</select>
+
+<div id="cargas_detalle" class="grid"></div>
+
+
 <!-- GENERACIÓN -->
 <div class="card">
 <h3>⚡ Generación por Unidad</h3>
@@ -134,6 +148,65 @@ function renderComparativo(actual, anterior){
   `;
 }
 
+// ===== CARGAS =====  
+function renderCargas(data, gerencia){
+
+  let detalle = {};
+
+  if(gerencia === "GDT"){
+    detalle = data.cargas.GDT_detalle || {};
+  }
+
+  if(gerencia === "GCH"){
+    detalle = data.cargas.GCH_detalle || {};
+  }
+
+  // fallback para otras
+  if(!detalle || Object.keys(detalle).length === 0){
+    detalle = data.cargas.Orinoquia || {};
+  }
+
+  const valores = Object.entries(detalle);
+
+  const max = Math.max(...valores.map(([k,v]) => v || 0));
+
+  const html = valores.map(([k,v])=>{
+
+    let pct = max ? (v / max) * 100 : 0;
+
+    return `
+      <div class="k">
+        ${k}<br>
+        ${Number(v).toFixed(1)} MW
+        <div style="background:#222; margin-top:5px; height:6px; border-radius:4px;">
+          <div style="
+            width:${pct}%;
+            height:100%;
+            background:#00c853;
+            border-radius:4px;">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("cargas_detalle").innerHTML = html;
+}
+
+  
+function activarSelectorGerencia(data){
+
+  const select = document.getElementById("selectGerencia");
+
+  select.onchange = () => {
+    renderCargas(data, select.value);
+  };
+
+  // inicial
+  renderCargas(data, select.value);
+}
+
+  
 // ===== GRAFICO =====
 function renderGrafico(hist){
   if(hist.length<2) return;
