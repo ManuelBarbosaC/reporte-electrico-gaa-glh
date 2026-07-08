@@ -12,6 +12,7 @@ body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .ok{color:#00c853} .warn{color:#ffd600} .bad{color:#ff1744}
 canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
 h3{margin-top:0}
+select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border:none}
 </style>
 </head>
 
@@ -19,13 +20,11 @@ h3{margin-top:0}
 
 <h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
 
-<!-- SELECTOR -->
+<!-- FECHA -->
 <div class="card">
 <h3>📅 Selección de fecha</h3>
-
 <input type="date" id="inputFecha">
 <div id="fechaActual" style="margin-top:8px;"></div>
-
 </div>
 
 <!-- KPIs -->
@@ -34,7 +33,7 @@ h3{margin-top:0}
 <div id="kpis" class="grid"></div>
 </div>
 
-
+<!-- CARGAS -->
 <div class="card">
 <h3>⚡ Cargas por Gerencia</h3>
 
@@ -46,7 +45,7 @@ h3{margin-top:0}
 </select>
 
 <div id="cargas_detalle" class="grid"></div>
-
+</div>
 
 <!-- GENERACIÓN -->
 <div class="card">
@@ -62,7 +61,7 @@ h3{margin-top:0}
 
 <!-- HISTORICO -->
 <div class="card">
-<h3>📈 Histórico (Demanda vs Generación)</h3>
+<h3>📈 Histórico</h3>
 <canvas id="grafico"></canvas>
 </div>
 
@@ -85,7 +84,7 @@ h3{margin-top:0}
 
 <script>
 
-// ====== UTIL ======
+// ===== FECHA =====
 function renderFecha(data){
   document.getElementById("fechaActual").innerText = data.fecha;
 }
@@ -108,10 +107,7 @@ function renderGeneracion(data){
     let c="ok";
     if(mw===0) c="bad";
     if(mw>50) c="warn";
-    return `
-      <div class="k ${c}">
-        ${k}<br>${mw.toFixed(1)} MW
-      </div>`;
+    return `<div class="k ${c}">${k}<br>${mw.toFixed(1)} MW</div>`;
   }).join("");
   document.getElementById("gen_unidades").innerHTML=html;
 }
@@ -124,7 +120,6 @@ function renderComparativo(actual, anterior){
 
   if(!anterior){
     cont.innerHTML = "<div class='k'>Sin histórico</div>";
-    titulo.innerText = "Sin comparativo";
     return;
   }
 
@@ -134,11 +129,7 @@ function renderComparativo(actual, anterior){
     let diff=h-a;
     let pct=a!==0?(diff/a)*100:0;
     let col=diff>0?"ok":diff<0?"bad":"";
-    let icon=diff>0?"▲":diff<0?"▼":"●";
-    return `<div class="k ${col}">
-      ${n}<br>${h.toFixed(1)}
-      <br><small>${icon} ${pct.toFixed(1)}%</small>
-    </div>`;
+    return `<div class="k ${col}">${n}<br>${h.toFixed(1)}<br><small>${pct.toFixed(1)}%</small></div>`;
   }
 
   cont.innerHTML=`
@@ -148,152 +139,34 @@ function renderComparativo(actual, anterior){
   `;
 }
 
-// ===== CARGAS =====  
+// ===== CARGAS =====
 function renderCargas(data, gerencia){
 
-  let detalle = {};
+  let detalle={};
 
-  if(gerencia === "GDT"){
-    detalle = data.cargas.GDT_detalle || {};
-  }
+  if(gerencia==="GDT") detalle=data.cargas.GDT_detalle||{};
+  else if(gerencia==="GCH") detalle=data.cargas.GCH_detalle||{};
+  else detalle=data.cargas.Orinoquia||{};
 
-  if(gerencia === "GCH"){
-    detalle = data.cargas.GCH_detalle || {};
-  }
+  const valores=Object.entries(detalle);
+  const max=Math.max(...valores.map(([k,v])=>v||0));
 
-  // fallback para otras
-  if(!detalle || Object.keys(detalle).length === 0){
-    detalle = data.cargas.Orinoquia || {};
-  }
-
-  const valores = Object.entries(detalle);
-
-  const max = Math.max(...valores.map(([k,v]) => v || 0));
-
-  const html = valores.map(([k,v])=>{
-
-    let pct = max ? (v / max) * 100 : 0;
-
+  document.getElementById("cargas_detalle").innerHTML= valores.map(([k,v])=>{
+    let pct=max?(v/max)*100:0;
     return `
       <div class="k">
-        ${k}<br>
-        ${Number(v).toFixed(1)} MW
-        <div style="background:#222; margin-top:5px; height:6px; border-radius:4px;">
-          <div style="
-            width:${pct}%;
-            height:100%;
-            background:#00c853;
-            border-radius:4px;">
-          </div>
+        ${k}<br>${Number(v).toFixed(1)} MW
+        <div style="background:#222;height:6px;margin-top:5px;">
+          <div style="width:${pct}%;height:100%;background:#00c853"></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join("");
-
-  document.getElementById("cargas_detalle").innerHTML = html;
 }
 
-  
 function activarSelectorGerencia(data){
-
-  const select = document.getElementById("selectGerencia");
-
-  select.onchange = () => {
-    renderCargas(data, select.value);
-  };
-
-  // inicial
-  renderCargas(data, select.value);
-}
-
-  
-// ===== GRAFICO =====
-function renderGrafico(hist){
-  if(hist.length<2) return;
-
-  const c=document.getElementById("grafico");
-  const ctx=c.getContext("2d");
-
-  c.width=c.offsetWidth;
-  c.height=300;
-
-  ctx.clearRect(0,0,c.width,c.height);
-
-  let dem=hist.map(d=>d.kpis.demanda_total_MW);
-  let gen=hist.map(d=>d.kpis.generacion_total_MW);
-
-  let max=Math.max(...dem,...gen);
-  let min=Math.min(...dem,...gen);
-  let rango=max-min||1;
-
-  function draw(data,color){
-    ctx.beginPath(); ctx.strokeStyle=color;
-    data.forEach((v,i)=>{
-      let x=i/(data.length-1)*c.width;
-      let y=c.height-((v-min)/rango)*c.height;
-      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-  }
-
-  draw(dem,"#FFD100");
-  draw(gen,"#00c853");
-}
-
-// ===== SCADA =====
-function renderSCADA(data){
-
-  const c=document.getElementById("scada");
-  const ctx=c.getContext("2d");
-
-  c.width=c.offsetWidth;
-  c.height=300;
-
-  const trs=data.sistema_electrico.transformadores.slice(0,6);
-  const lns=data.sistema_electrico.lineas.slice(0,6);
-
-  let offset=0;
-
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    let cx=c.width/2,cy=c.height/2;
-
-    ctx.fillStyle="#0f0";
-    ctx.beginPath(); ctx.arc(cx,cy,10,0,6.28); ctx.fill();
-
-    function flow(x1,y1,x2,y2,color){
-      for(let i=0;i<4;i++){
-        let t=(i+offset)%4/4;
-        ctx.beginPath();
-        ctx.fillStyle=color;
-        ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,3,0,6.28);
-        ctx.fill();
-      }
-    }
-
-    trs.forEach((t,i)=>{
-      let a=i/trs.length*Math.PI;
-      let x=cx+Math.cos(a)*120;
-      let y=cy-Math.sin(a)*90;
-      ctx.strokeStyle="lime";
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-      flow(cx,cy,x,y,"lime");
-    });
-
-    lns.forEach((l,i)=>{
-      let a=i/lns.length*Math.PI+Math.PI;
-      let x=cx+Math.cos(a)*150;
-      let y=cy-Math.sin(a)*110;
-      ctx.strokeStyle="#4aa3ff";
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x,y); ctx.stroke();
-      flow(cx,cy,x,y,"#4aa3ff");
-    });
-
-    offset+=0.05;
-    requestAnimationFrame(draw);
-  }
-
-  draw();
+  const select=document.getElementById("selectGerencia");
+  select.onchange=()=>renderCargas(data,select.value);
+  renderCargas(data,select.value);
 }
 
 // ===== ALERTAS =====
@@ -317,100 +190,41 @@ function renderEstado(){
   document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
 }
 
-// ===== SELECTOR =====
+// ===== CARGA =====
+async function cargarPorFecha(fecha,fechas){
 
-function activarCalendario(fechas){
+  const data=await fetch("data/"+fecha+".json").then(r=>r.json());
 
-  const input = document.getElementById("inputFecha");
+  const index=fechas.indexOf(fecha);
+  let anterior=null;
 
-  // ✅ limitar rango
-  input.min = fechas[0];
-  input.max = fechas.at(-1);
-
-  // ✅ valor inicial
-  input.value = fechas.at(-1);
-
-  input.onchange = () => {
-    cargarPorFecha(input.value, fechas);
-  };
-
-}
-
-
-// ===== CARGA POR FECHA =====
-
-
-async function cargarPorFecha(fecha, fechas){
-
-  if(!fechas.includes(fecha)){
-    alert("⚠️ No hay datos para esa fecha");
-    return;
+  if(index>0){
+    anterior=await fetch("data/"+fechas[index-1]+".json").then(r=>r.json());
   }
-
-  const data = await fetch("data/"+fecha+".json")
-    .then(r=>r.json());
-
-// ✅ ordenar FECHAS REALES (no texto)
-const fechasOrdenadas = [...fechas].sort((a,b)=> new Date(a) - new Date(b));
-
-// ✅ índice correcto
-const index = fechasOrdenadas.indexOf(fecha);
-
-let anterior = null;
-
-// ✅ buscar anterior REAL
-if(index > 0){
-
-  const fechaAnterior = fechasOrdenadas[index - 1];
-
-  try {
-    const resp = await fetch("data/" + fechaAnterior + ".json");
-
-    if(resp.ok){
-      anterior = await resp.json();
-    }
-
-  } catch(e){
-    anterior = null;
-  }
-}
-
-
-  // ✅ histórico real
-  const hist_raw = await Promise.all(
-    fechasOrdenadas.slice(Math.max(0,index-6),index+1)
-      .map(f => fetch("data/"+f+".json")
-        .then(r=>r.ok?r.json():null)
-      )
-  );
-
-  const hist = hist_raw.filter(x=>x);
 
   renderFecha(data);
   renderKpis(data);
   renderGeneracion(data);
-  renderComparativo(data, anterior);
-  renderGrafico(hist);
-  renderSCADA(data);
+  renderComparativo(data,anterior);
   renderAlertas(data);
   renderEstado();
-}
 
+  activarSelectorGerencia(data);
+}
 
 // ===== INICIO =====
-
 async function cargarDatos(){
 
-  const manifest = await fetch("manifest.json")
-    .then(r=>r.json());
+  const manifest=await fetch("manifest.json").then(r=>r.json());
+  const fechas=manifest.fechas.sort();
 
-  const fechas = manifest.fechas.sort();
+  const input=document.getElementById("inputFecha");
+  input.value=fechas.at(-1);
 
-  activarCalendario(fechas);
+  input.onchange=()=>cargarPorFecha(input.value,fechas);
 
-  await cargarPorFecha(fechas.at(-1), fechas);
+  cargarPorFecha(fechas.at(-1),fechas);
 }
-
 
 cargarDatos();
 
