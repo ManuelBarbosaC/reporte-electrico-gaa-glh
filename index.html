@@ -66,20 +66,32 @@ h3{margin-top:0}
 function adaptarData(data){
 
   let totalGen = 0;
-  if(data.generacion){
-    Object.values(data.generacion).forEach(g=>{
-      totalGen += Object.values(g).reduce((a,v)=>a+Number(v||0),0);
-    });
-  }
-
-  data.kpis.generacion_total_MW = totalGen;
-
   data.kpis_generacion = {};
-  if(data.generacion?.termica){
-    Object.entries(data.generacion.termica).forEach(([k,v])=>{
-      data.kpis_generacion[k] = {potencia_MW:Number(v||0)};
+
+  if(data.generacion){
+
+    // 🔹 recorrer TODOS los grupos
+    Object.entries(data.generacion).forEach(([grupo, fuentes])=>{
+
+      Object.entries(fuentes).forEach(([nombre, valor])=>{
+
+        let mw = Number(valor || 0);
+
+        // ✅ sumar al total
+        totalGen += mw;
+
+        // ✅ guardar cada fuente individual
+        data.kpis_generacion[nombre] = {
+          potencia_MW: mw,
+          tipo: grupo
+        };
+
+      });
     });
   }
+
+  // ✅ total generación
+  data.kpis.generacion_total_MW = totalGen;
 
   return data;
 }
