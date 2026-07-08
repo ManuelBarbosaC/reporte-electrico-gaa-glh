@@ -1,0 +1,134 @@
+{
+  "fecha": "2025-12-03",
+  "kpis": {
+    "demanda_total_MW": 287.31,
+    "generacion_total_MW": 45.22,
+    "gas_total_KPC": 10716.82,
+    "STN": 191.63,
+    "STR": 47.43
+  },
+  "kpis_generacion": {
+    "TEO": {
+      "potencia_MW": 22.36
+    },
+    "TES_1": {
+      "potencia_MW": 0
+    },
+    "TES_2": {
+      "potencia_MW": 0
+    },
+    "TES_3": {
+      "potencia_MW": 22.86
+    }
+  },
+  "sistema_electrico": {
+    "transformadores": [
+      {
+        "nombre": "TR01_CDC_MW",
+        "MW": 19.09
+      },
+      {
+        "nombre": "TR02_CDC_MW",
+        "MW": 15.5
+      },
+      {
+        "nombre": "TR03_CDC_MW",
+        "MW": 22.17
+      },
+      {
+        "nombre": "TR01_CDF_MW",
+        "MW": 28.15
+      },
+      {
+        "nombre": "TR02_CDF_MW",
+        "MW": 32.83
+      },
+      {
+        "nombre": "TR01_CDK_MW",
+        "MW": 29.65
+      },
+      {
+        "nombre": "TR02_CDK_MW",
+        "MW": 28.79
+      },
+      {
+        "nombre": "TR03_CDK_MW",
+        "MW": 11.21
+      },
+      {
+        "nombre": "TR01_CDO_MW",
+        "MW": 22.33
+      },
+      {
+        "nombre": "TR02_CDO_MW",
+        "MW": 30.25
+      },
+      {
+        "nombre": "TR03_CDO_MW",
+        "MW": 17.13
+      },
+      {
+        "nombre": "TR01_CDS_MW",
+        "MW": 13.14
+      },
+      {
+        "nombre": "TR02_CDS_MW",
+        "MW": 7.82
+      }
+    ],
+    "lineas": [
+      {
+        "nombre": "TEO_CDO_MW",
+        "MW": 22.33
+      },
+      {
+        "nombre": "CDO_CDC_MW",
+        "MW": 37.66
+      },
+      {
+        "nombre": "CDS_CDK_MW",
+        "MW": 2.93
+      },
+      {
+        "nombre": "CDS_EMSA_MW",
+        "MW": 0
+      },
+      {
+        "nombre": "CDC_CDK_MW",
+        "MW": 16.09
+      },
+      {
+        "nombre": "CDF_CDK_MW",
+        "MW": 81.62
+      },
+      {
+        "nombre": "CDO_CDF_MW",
+        "MW": 69.91
+      },
+      {
+        "nombre": "CENIT_CDF_MW",
+        "MW": 33.34
+      },
+      {
+        "nombre": "Compensacion_Reactiva_CDF_MW",
+        "MW": 0
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDK_MW",
+        "MW": 0.58
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDC_MW",
+        "MW": 0.46
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDK_34.5_kV__MW",
+        "MW": 0.15
+      },
+      {
+        "nombre": "Compensación_Reactiva_CDO_MW",
+        "MW": 0
+      }
+    ]
+  }
+}
