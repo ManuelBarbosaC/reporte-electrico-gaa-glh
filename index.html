@@ -2,271 +2,206 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Eléctrico – GAA/GLH</title>
+<title>Dashboard Eléctrico GAA / GLH</title>
 
 <style>
 body{margin:0;font-family:system-ui;background:#0f1720;color:white}
-.card{background:#111e2b;margin:10px;padding:12px;border-radius:10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.card{background:#111e2b;margin:10px;padding:12px;border-radius:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .k{background:#0b141f;padding:10px;border-radius:8px;text-align:center}
-.ok{color:#00c853}.warn{color:#ffd600}.bad{color:#ff1744}
-canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
-select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border:none}
+canvas{width:100%;height:320px;background:#0a0f1a;border-radius:12px}
+select{background:#0b141f;color:white;padding:8px;border-radius:8px;border:none}
+.ok{color:#00c853}.bad{color:#ff1744}
 </style>
 </head>
 
 <body>
 
-<h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
+<h2 style="padding:10px">⚡ Dashboard Eléctrico</h2>
 
-<!-- FECHA -->
 <div class="card">
-<h3>📅 Fecha</h3>
-<input type="date" id="inputFecha">
-<div id="fechaActual"></div>
+<select id="fechaSelect"></select>
 </div>
 
-<!-- KPIs -->
 <div class="card">
-<h3>📊 KPIs</h3>
 <div id="kpis" class="grid"></div>
 </div>
 
-<!-- CARGAS -->
 <div class="card">
-<h3>⚡ Cargas por Gerencia</h3>
+<h3>📈 Demanda vs Generación</h3>
+<canvas id="chart"></canvas>
+</div>
 
-<select id="selectGerencia">
+<div class="card">
+<h3>⚡ Cargas</h3>
+<select id="selGer">
 <option value="GDT">GDT</option>
 <option value="GCH">GCH</option>
 <option value="GDA">GDA</option>
 <option value="GLC">GLC</option>
 </select>
-
-<div id="cargas_detalle" class="grid"></div>
-</div>
-
-<!-- GENERACIÓN -->
-<div class="card">
-<h3>⚡ Generación</h3>
-<div id="gen_unidades" class="grid"></div>
-</div>
-
-<!-- COMPARATIVO -->
-<div class="card">
-<h3 id="tituloComparativo">📊 Comparativo</h3>
-<div id="comparativo" class="grid"></div>
-</div>
-
-<!-- HISTORICO -->
-<div class="card">
-<h3>📈 Histórico</h3>
-<canvas id="grafico"></canvas>
-</div>
-
-<!-- SCADA -->
-<div class="card">
-<h3>🖥️ SCADA</h3>
-<canvas id="scada"></canvas>
-</div>
-
-<!-- ALERTAS -->
-<div class="card">
-<h3>🚨 Alertas</h3>
-<ul id="alertas"></ul>
-</div>
-
-<div class="card">
-<h3>Estado Sistema</h3>
-<div id="estadoSistema"></div>
+<div id="cargas" class="grid"></div>
 </div>
 
 <script>
 
-// ===== FECHA =====
-function renderFecha(data){
-  document.getElementById("fechaActual").innerText=data.fecha;
+let HIST = {};
+
+// ===== ADAPTADOR NUEVO JSON =====
+function adaptar(rep){
+
+  // demanda
+  const dem = Number(rep.kpis?.demanda_total_MW || 0);
+
+  // generación
+  let gen = 0;
+  if(rep.generacion){
+    Object.values(rep.generacion).forEach(grupo=>{
+      gen += Object.values(grupo).reduce((a,v)=>a+Number(v||0),0);
+    });
+  }
+
+  return {
+    fecha: rep.fecha,
+    demanda: dem,
+    generacion: gen,
+    cargas: rep.cargas || {}
+  };
 }
 
 // ===== KPIs =====
-function renderKpis(data){
-  const d=data.kpis;
-  document.getElementById("kpis").innerHTML=`
-    <div class="k">Demanda<br>${d.demanda_total_MW.toFixed(1)}</div>
-    <div class="k">STN<br>${d.STN.toFixed(1)}</div>
-    <div class="k">Generación<br>${d.generacion_total_MW.toFixed(1)}</div>
+function renderKpis(d){
+  document.getElementById('kpis').innerHTML=`
+    <div class="k">Demanda<br>${d.demanda.toFixed(1)}</div>
+    <div class="k">Generación<br>${d.generacion.toFixed(1)}</div>
+    <div class="k ${d.demanda>d.generacion?'bad':'ok'}">
+      Balance<br>${(d.generacion-d.demanda).toFixed(1)}
+    </div>
   `;
-}
-
-// ===== GENERACION =====
-function renderGeneracion(data){
-  const gen=data.kpis_generacion;
-  document.getElementById("gen_unidades").innerHTML=
-    Object.entries(gen).map(([k,v])=>{
-      let mw=Number(v.potencia_MW||0);
-      return `<div class="k">${k}<br>${mw.toFixed(1)}</div>`;
-    }).join("");
 }
 
 // ===== CARGAS =====
-function renderCargas(data,gerencia){
-  let d={};
-  if(gerencia==="GDT") d=data.cargas.GDT_detalle||{};
-  else if(gerencia==="GCH") d=data.cargas.GCH_detalle||{};
-  else d=data.cargas.Orinoquia||{};
+function renderCargas(d, g){
 
-  let max=Math.max(...Object.values(d).map(v=>v||0));
+  let det={};
 
-  document.getElementById("cargas_detalle").innerHTML=
-    Object.entries(d).map(([k,v])=>{
+  if(g==="GDT") det=d.cargas.GDT_detalle||{};
+  else if(g==="GCH") det=d.cargas.GCH_detalle||{};
+  else det=d.cargas.Orinoquia||{};
+
+  let max=Math.max(...Object.values(det).map(x=>x||0));
+
+  document.getElementById('cargas').innerHTML =
+    Object.entries(det).map(([k,v])=>{
       let pct=max?(v/max)*100:0;
-      return `<div class="k">${k}<br>${v.toFixed(1)} MW
-        <div style="background:#222;height:6px;margin-top:4px">
+
+      return `
+      <div class="k">
+        ${k}<br>${v.toFixed(1)}
+        <div style="background:#222;height:6px">
           <div style="width:${pct}%;height:100%;background:#00c853"></div>
         </div>
       </div>`;
-    }).join("");
+    }).join('');
 }
 
-function activarSelectorGerencia(data){
-  const s=document.getElementById("selectGerencia");
-  s.onchange=()=>renderCargas(data,s.value);
-  renderCargas(data,s.value);
-}
+// ===== GRÁFICO =====
+function renderGrafico(){
 
-// ===== COMPARATIVO =====
-function renderComparativo(a,b){
-  if(!b)return;
+  const canvas=document.getElementById('chart');
+  const ctx=canvas.getContext('2d');
 
-  document.getElementById("tituloComparativo").innerText=
-    `${a.fecha} vs ${b.fecha}`;
+  const data=Object.values(HIST);
 
-  function box(n,x,y){
-    let diff=x-y;
-    let c=diff>0?"ok":diff<0?"bad":"";
-    return `<div class="k ${c}">${n}<br>${x.toFixed(1)}</div>`;
-  }
+  if(data.length<2) return;
 
-  document.getElementById("comparativo").innerHTML=`
-    ${box("Demanda",a.kpis.demanda_total_MW,b.kpis.demanda_total_MW)}
-    ${box("STN",a.kpis.STN,b.kpis.STN)}
-    ${box("Gen",a.kpis.generacion_total_MW,b.kpis.generacion_total_MW)}
-  `;
-}
+  canvas.width=canvas.offsetWidth;
+  canvas.height=320;
 
-// ===== HISTÓRICO =====
-function renderGrafico(hist){
-  let c=document.getElementById("grafico");
-  let ctx=c.getContext("2d");
-  c.width=c.offsetWidth;
+  const dem=data.map(x=>x.demanda);
+  const gen=data.map(x=>x.generacion);
 
-  let d=hist.map(x=>x.kpis.demanda_total_MW);
-  let g=hist.map(x=>x.kpis.generacion_total_MW);
+  const max=Math.max(...dem,...gen);
+  const min=Math.min(...dem,...gen);
+  const r=max-min||1;
 
-  let max=Math.max(...d,...g);
-  let min=Math.min(...d,...g);
-  let r=max-min||1;
+  const x = i => i/(data.length-1)*canvas.width;
+  const y = v => canvas.height-((v-min)/r)*canvas.height;
 
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // líneas
   function draw(arr,color){
-    ctx.beginPath();ctx.strokeStyle=color;
+    ctx.beginPath();
+    ctx.strokeStyle=color;
+
     arr.forEach((v,i)=>{
-      let x=i/(arr.length-1)*c.width;
-      let y=300-((v-min)/r)*300;
-      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+      let px=x(i), py=y(v);
+      i?ctx.lineTo(px,py):ctx.moveTo(px,py);
     });
+
     ctx.stroke();
   }
 
-  ctx.clearRect(0,0,c.width,300);
-  draw(d,"#FFD100");
-  draw(g,"#00c853");
+  draw(dem,"#FFD100");     // demanda
+  draw(gen,"#00c853");     // generación
+
+  // DÉFICIT
+  for(let i=0;i<dem.length;i++){
+
+    if(dem[i]>gen[i]){
+
+      ctx.fillStyle="rgba(255,0,0,0.25)";
+
+      ctx.fillRect(
+        x(i)-6,
+        y(dem[i]),
+        12,
+        y(gen[i]) - y(dem[i])
+      );
+    }
+  }
 }
 
-// ===== SCADA =====
-function renderSCADA(data){
-  const c=document.getElementById("scada");
-  const ctx=c.getContext("2d");
+// ===== FLUJO =====
+async function cargar(){
 
-  c.width=c.offsetWidth;
+  const m = await fetch("manifest.json").then(r=>r.json());
+  const fechas = m.fechas.sort();
 
-  ctx.clearRect(0,0,c.width,300);
+  const sel=document.getElementById("fechaSelect");
 
-  let trs=data.sistema_electrico.transformadores.slice(0,6);
+  // cargar histórico
+  for(let f of fechas){
+    let raw = await fetch("data/"+f+".json").then(r=>r.json());
+    HIST[f] = adaptar(raw);
 
-  let cx=c.width/2,cy=150;
-
-  ctx.fillStyle="lime";
-  ctx.beginPath();ctx.arc(cx,cy,10,0,6.28);ctx.fill();
-
-  trs.forEach((t,i)=>{
-    let a=i/trs.length*Math.PI;
-    let x=cx+Math.cos(a)*120;
-    let y=cy-Math.sin(a)*90;
-
-    ctx.strokeStyle="lime";
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
-  });
-}
-
-// ===== ALERTAS =====
-function renderAlertas(data){
-  let k=data.kpis,u="";
-  if(k.generacion_total_MW<k.demanda_total_MW*0.5)u+="<li>🔴 Baja generación</li>";
-  if((k.STN)/(k.demanda_total_MW||1)>0.6)u+="<li>🔴 STN alto</li>";
-  if(!u)u="<li>🟢 Estable</li>";
-  document.getElementById("alertas").innerHTML=u;
-}
-
-function renderEstado(){
-  document.getElementById("estadoSistema").innerText="🟢 OK";
-}
-
-// ===== CARGA DATA =====
-async function cargarPorFecha(f,fechas){
-
-  let data=await fetch("data/"+f+".json").then(r=>r.json());
-
-  const fechasOrdenadas = [...fechas].sort((a,b)=> new Date(a) - new Date(b));
-  const idx = fechasOrdenadas.indexOf(f);
-
-  let ant=null;
-
-  if(idx>0){
-    const fechaAnterior = fechasOrdenadas[idx-1];
-    ant = await fetch("data/"+fechaAnterior+".json").then(r=>r.json());
+    let opt=document.createElement("option");
+    opt.value=f;
+    opt.textContent=f;
+    sel.appendChild(opt);
   }
 
-  let hist = await Promise.all(
-    fechasOrdenadas.slice(Math.max(0,idx-6),idx+1)
-    .map(x=>fetch("data/"+x+".json").then(r=>r.json()))
-  );
+  sel.value = fechas.at(-1);
 
-  renderFecha(data);
-  renderKpis(data);
-  renderGeneracion(data);
-  renderComparativo(data,ant);
-  renderGrafico(hist);
-  renderSCADA(data);
-  renderAlertas(data);
-  renderEstado();
-  activarSelectorGerencia(data);
+  function render(){
+
+    const h = HIST[sel.value];
+
+    renderKpis(h);
+    renderGrafico();
+
+    renderCargas(h, document.getElementById("selGer").value);
+  }
+
+  sel.onchange=render;
+
+  document.getElementById("selGer").onchange=render;
+
+  render();
 }
 
-// ===== INIT =====
-async function iniciar(){
-
-  let m=await fetch("manifest.json").then(r=>r.json());
-  let f=m.fechas.sort();
-
-  let input=document.getElementById("inputFecha");
-
-  input.value=f.at(-1);
-  input.onchange=()=>cargarPorFecha(input.value,f);
-
-  cargarPorFecha(f.at(-1),f);
-}
-
-iniciar();
+cargar();
 
 </script>
 
