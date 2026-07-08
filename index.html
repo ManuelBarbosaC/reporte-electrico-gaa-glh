@@ -198,6 +198,17 @@ async function cargarPorFecha(fecha,fechas){
   const index=fechas.indexOf(fecha);
   let anterior=null;
 
+// ✅ histórico
+const hist_raw = await Promise.all(
+  fechas
+    .slice(Math.max(0,index-6),index+1)
+    .map(f => fetch("data/"+f+".json")
+      .then(r=>r.ok?r.json():null)
+    )
+);
+
+const hist = hist_raw.filter(x=>x);
+
   if(index>0){
     anterior=await fetch("data/"+fechas[index-1]+".json").then(r=>r.json());
   }
