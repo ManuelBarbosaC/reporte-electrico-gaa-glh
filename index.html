@@ -74,3 +74,240 @@ function trend(h,a){
 
  let icon="●",color="#999"
 
+ if(d>0){icon="▲";color="#00c853"}
+ if(d<0){icon="▼";color="#ff1744"}
+
+ return `<span style="color:${color}">${icon} ${pct.toFixed(1)}%</span>`
+}
+
+// ===== ADAPTAR =====
+function adapt(d){
+
+ if(!d.kpis) d.kpis={}
+ if(!d.kpis_generacion) d.kpis_generacion={}
+ if(!d.sistema_electrico) d.sistema_electrico={}
+
+ let gen=0
+
+ Object.values(d.kpis_generacion).forEach(v=>{
+   gen+=n(v.potencia_MW)
+ })
+
+ d.kpis.gen=gen
+ d.kpis.dem=n(d.kpis.demanda_total_MW)
+ d.kpis.stn=n(d.kpis.STN)
+
+ return d
+}
+
+// ===== KPIS =====
+function renderKpis(d){
+
+ document.getElementById("kpis").innerHTML=`
+ <div class="k" style="border-left-color:#FFD100">
+   Demanda<br><b>${fmt(d.kpis.dem)}</b>
+ </div>
+
+ <div class="k" style="border-left-color:#4aa3ff">
+   STN<br><b>${fmt(d.kpis.stn)}</b>
+ </div>
+
+ <div class="k" style="border-left-color:#00c853">
+   Generación<br><b>${fmt(d.kpis.gen)}</b>
+ </div>
+ `;
+}
+
+// ===== GENERACION =====
+function renderGen(d){
+
+ let g=d.kpis_generacion||{}
+ let max=Math.max(...Object.values(g).map(v=>n(v.potencia_MW)),1)
+
+ document.getElementById("gen").innerHTML=
+ Object.entries(g).map(([k,v])=>{
+   let mw=n(v.potencia_MW)
+   let pct=(mw/max)*100
+
+   return `
+   <div class="k">
+     ${k}<br>
+     ${fmt(mw)} MW
+     <div style="background:#222;height:6px;margin-top:6px">
+       <div style="width:${pct}%;height:100%;background:#00c853"></div>
+     </div>
+   </div>`
+ }).join("")
+}
+
+// ===== COMPARATIVO GENERACION =====
+function cmpGen(h,a){
+
+ if(!h||!a)return
+
+ let keys=new Set([...Object.keys(h.kpis_generacion),...Object.keys(a.kpis_generacion)])
+
+ document.getElementById("gen_comp").innerHTML=[...keys].map(k=>{
+   let hv=n(h.kpis_generacion[k]?.potencia_MW)
+   let av=n(a.kpis_generacion[k]?.potencia_MW)
+
+   let c=""
+   if(hv>av)c="ok"
+   if(hv<av)c="bad"
+
+   return `<div class="k ${c}">
+   ${k}<br>${fmt(hv)}
+   <br><small>${trend(hv,av)}</small>
+   </div>`
+ }).join("")
+}
+
+// ===== MAP LIST =====
+function mapList(l){
+ let o={}
+ l.forEach(x=>o[x.nombre]=n(x.MW))
+ return o
+}
+
+// ===== COMPARATIVO LIST =====
+function cmpList(h,a,id){
+
+ if(!h||!a)return
+
+ let H=mapList(h)
+ let A=mapList(a)
+
+ let keys=new Set([...Object.keys(H),...Object.keys(A)])
+
+ document.getElementById(id).innerHTML=[...keys].map(k=>{
+   let hv=n(H[k])
+   let av=n(A[k])
+
+   let c=""
+   if(hv>av*1.2)c="bad"
+   else if(hv>av)c="warn"
+   else c="ok"
+
+   return `<div class="k ${c}">
+   ${k}<br>${fmt(hv)}
+   <br><small>${trend(hv,av)}</small>
+   </div>`
+ }).join("")
+}
+
+// ===== GRAFICO =====
+function plot(hist){
+
+ let c=document.getElementById("chart")
+ let ctx=c.getContext("2d")
+
+ c.width=c.offsetWidth
+ c.height=320
+
+ let dem=hist.map(d=>d.kpis.dem)
+ let gen=hist.map(d=>d.kpis.gen)
+
+ let max=Math.max(...dem,...gen)
+ let min=Math.min(...dem,...gen)
+ let r=max-min||1
+
+ let m={l:50,b:30}
+
+ let x=i=>m.l+i/(hist.length-1)*(c.width-m.l-10)
+ let y=v=>c.height-m.b-(v-min)/r*(c.height-m.b)
+
+ ctx.clearRect(0,0,c.width,c.height)
+
+ // GRID
+ ctx.strokeStyle="#222"
+ for(let i=0;i<=4;i++){
+  let yy=y(min+r/4*i)
+  ctx.beginPath()
+  ctx.moveTo(m.l,yy)
+  ctx.lineTo(c.width,yy)
+  ctx.stroke()
+ }
+
+ // eje Y
+ ctx.fillStyle="#aaa"
+ for(let i=0;i<=4;i++){
+  let val=min+r/4*i
+  ctx.fillText(val.toFixed(0),5,y(val))
+ }
+
+ // eje X
+ hist.forEach((d,i)=>{
+  ctx.fillText(d.fecha.slice(5),x(i)-15,c.height-5)
+ })
+
+ function draw(arr,col){
+   ctx.beginPath()
+   ctx.strokeStyle=col
+   arr.forEach((v,i)=>{
+     i?ctx.lineTo(x(i),y(v)):ctx.moveTo(x(i),y(v))
+   })
+   ctx.stroke()
+ }
+
+ draw(dem,"#FFD100")
+ draw(gen,"#00c853")
+
+ // DEFICIT
+ for(let i=0;i<dem.length;i++){
+  if(dem[i]>gen[i]){
+    ctx.fillStyle="rgba(255,0,0,0.35)"
+    ctx.fillRect(x(i)-4,y(dem[i]),8,y(gen[i])-y(dem[i]))
+  }
+ }
+}
+
+// ===== MAIN =====
+async function run(){
+
+ let m=await fetch("manifest.json").then(r=>r.json())
+ let f=m.fechas.sort((a,b)=>new Date(a)-new Date(b))
+
+ document.getElementById("inputFecha").value=f.at(-1)
+
+ document.getElementById("inputFecha").onchange=e=>{
+  load(e.target.value,f)
+ }
+
+ load(f.at(-1),f)
+}
+
+async function load(fecha,f){
+
+ let d=adapt(await fetch("data/"+fecha+".json").then(r=>r.json()))
+
+ let i=f.indexOf(fecha)
+ let a=i>0?adapt(await fetch("data/"+f[i-1]+".json").then(r=>r.json())):null
+
+ let hist=await Promise.all(
+  f.slice(Math.max(0,i-6),i+1)
+   .map(x=>fetch("data/"+x+".json").then(r=>r.json()).then(adapt))
+ )
+
+ document.getElementById("fechaActual").innerText=fecha
+
+ renderKpis(d)
+ renderGen(d)
+ cmpGen(d,a)
+
+ cmpList(d.sistema_electrico.transformadores,
+         a.sistema_electrico.transformadores,
+         "trs_comp")
+
+ cmpList(d.sistema_electrico.lineas,
+         a.sistema_electrico.lineas,
+         "lin_comp")
+
+ plot(hist)
+}
+
+run()
+
+</script>
+
+</body>
+</html>
