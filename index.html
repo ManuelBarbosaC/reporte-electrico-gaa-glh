@@ -2,206 +2,291 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard Eléctrico GAA / GLH</title>
+<title>Dashboard Eléctrico – GAA/GLH</title>
 
 <style>
 body{margin:0;font-family:system-ui;background:#0f1720;color:white}
-.card{background:#111e2b;margin:10px;padding:12px;border-radius:12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.card{background:#111e2b;margin:10px;padding:12px;border-radius:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .k{background:#0b141f;padding:10px;border-radius:8px;text-align:center}
-canvas{width:100%;height:320px;background:#0a0f1a;border-radius:12px}
-select{background:#0b141f;color:white;padding:8px;border-radius:8px;border:none}
-.ok{color:#00c853}.bad{color:#ff1744}
+.ok{color:#00c853} .warn{color:#ffd600} .bad{color:#ff1744}
+canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
+h3{margin-top:0}
 </style>
 </head>
 
 <body>
 
-<h2 style="padding:10px">⚡ Dashboard Eléctrico</h2>
+<h2 style="padding:10px">⚡ Dashboard Eléctrico GAA / GLH</h2>
 
+<!-- KPIs -->
 <div class="card">
-<select id="fechaSelect"></select>
-</div>
-
-<div class="card">
+<h3>📊 KPIs</h3>
 <div id="kpis" class="grid"></div>
 </div>
 
+<!-- GENERACIÓN -->
 <div class="card">
-<h3>📈 Demanda vs Generación</h3>
-<canvas id="chart"></canvas>
+<h3>⚡ Generación por Unidad</h3>
+<div id="gen_unidades" class="grid"></div>
+</div>
+
+<!-- COMPARATIVO -->
+<div class="card">
+<h3>📊 HOY vs AYER</h3>
+<div id="comparativo" class="grid"></div>
+</div>
+
+<!-- HISTORICO -->
+<div class="card">
+<h3>📈 Histórico (Demanda vs Generación)</h3>
+<canvas id="grafico"></canvas>
+</div>
+
+<!-- SCADA -->
+<div class="card">
+<h3>🖥️ SCADA</h3>
+<canvas id="scada"></canvas>
+</div>
+
+<!-- ALERTAS -->
+<div class="card">
+<h3>🚨 Alertas</h3>
+<ul id="alertas"></ul>
 </div>
 
 <div class="card">
-<h3>⚡ Cargas</h3>
-<select id="selGer">
-<option value="GDT">GDT</option>
-<option value="GCH">GCH</option>
-<option value="GDA">GDA</option>
-<option value="GLC">GLC</option>
-</select>
-<div id="cargas" class="grid"></div>
+<h3>Estado Sistema</h3>
+<div id="estadoSistema"></div>
 </div>
 
 <script>
 
-let HIST = {};
-
-// ===== ADAPTADOR NUEVO JSON =====
-function adaptar(rep){
-
-  // demanda
-  const dem = Number(rep.kpis?.demanda_total_MW || 0);
-
-  // generación
-  let gen = 0;
-  if(rep.generacion){
-    Object.values(rep.generacion).forEach(grupo=>{
-      gen += Object.values(grupo).reduce((a,v)=>a+Number(v||0),0);
-    });
-  }
-
-  return {
-    fecha: rep.fecha,
-    demanda: dem,
-    generacion: gen,
-    cargas: rep.cargas || {}
-  };
-}
-
 // ===== KPIs =====
-function renderKpis(d){
-  document.getElementById('kpis').innerHTML=`
-    <div class="k">Demanda<br>${d.demanda.toFixed(1)}</div>
-    <div class="k">Generación<br>${d.generacion.toFixed(1)}</div>
-    <div class="k ${d.demanda>d.generacion?'bad':'ok'}">
-      Balance<br>${(d.generacion-d.demanda).toFixed(1)}
-    </div>
+function renderKpis(data){
+
+  const d=data.kpis;
+
+  document.getElementById("kpis").innerHTML=`
+    <div class="k">Demanda<br>${d.demanda_total_MW.toFixed(1)} MW</div>
+    <div class="k">STN<br>${d.STN.toFixed(1)} MW</div>
+    <div class="k">Generación<br>${d.generacion_total_MW.toFixed(1)} MW</div>
   `;
 }
 
-// ===== CARGAS =====
-function renderCargas(d, g){
+// ===== GENERACION =====
+function renderGeneracion(data){
 
-  let det={};
+  const gen=data.kpis_generacion;
 
-  if(g==="GDT") det=d.cargas.GDT_detalle||{};
-  else if(g==="GCH") det=d.cargas.GCH_detalle||{};
-  else det=d.cargas.Orinoquia||{};
+  const html=Object.entries(gen).map(([k,v])=>{
 
-  let max=Math.max(...Object.values(det).map(x=>x||0));
+    let mw=Number(v.potencia_MW||0);
 
-  document.getElementById('cargas').innerHTML =
-    Object.entries(det).map(([k,v])=>{
-      let pct=max?(v/max)*100:0;
+    let c="ok";
+    if(mw===0) c="bad";
+    if(mw>50) c="warn";
 
-      return `
-      <div class="k">
-        ${k}<br>${v.toFixed(1)}
-        <div style="background:#222;height:6px">
-          <div style="width:${pct}%;height:100%;background:#00c853"></div>
-        </div>
-      </div>`;
-    }).join('');
+    return `
+      <div class="k ${c}">
+        ${k}<br>
+        ${mw.toFixed(1)} MW
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("gen_unidades").innerHTML=html;
 }
 
-// ===== GRÁFICO =====
-function renderGrafico(){
+// ===== COMPARATIVO =====
+function renderComparativo(hoy,ayer){
 
-  const canvas=document.getElementById('chart');
-  const ctx=canvas.getContext('2d');
+  if(!ayer){
+    document.getElementById("comparativo").innerHTML="<div class='k'>Sin histórico suficiente</div>";
+    return;
+  }
 
-  const data=Object.values(HIST);
+  function fila(n,h,a){
+    if(!a) return `<div class="k">${n}<br>—</div>`;
+    let diff=h-a;
+    let pct=(diff/a)*100;
+    let col=diff>0?"ok":"bad";
+    let icon=diff>0?"▲":"▼";
 
-  if(data.length<2) return;
+    return `<div class="k ${col}">
+      ${n}<br>${h}<br><small>${icon} ${pct.toFixed(1)}%</small>
+    </div>`;
+  }
 
-  canvas.width=canvas.offsetWidth;
-  canvas.height=320;
+  document.getElementById("comparativo").innerHTML=`
+    ${fila("Demanda",hoy.kpis.demanda_total_MW,ayer.kpis.demanda_total_MW)}
+    ${fila("STN",hoy.kpis.STN,ayer.kpis.STN)}
+    ${fila("Gen",hoy.kpis.generacion_total_MW,ayer.kpis.generacion_total_MW)}
+  `;
+}
 
-  const dem=data.map(x=>x.demanda);
-  const gen=data.map(x=>x.generacion);
+// ===== GRAFICO =====
+function renderGrafico(hist){
 
-  const max=Math.max(...dem,...gen);
-  const min=Math.min(...dem,...gen);
-  const r=max-min||1;
+  if(!hist||hist.length<2) return;
 
-  const x = i => i/(data.length-1)*canvas.width;
-  const y = v => canvas.height-((v-min)/r)*canvas.height;
+  const c=document.getElementById("grafico");
+  const ctx=c.getContext("2d");
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  c.width=c.offsetWidth;
+  c.height=300;
 
-  // líneas
-  function draw(arr,color){
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const demanda=hist.map(d=>d.kpis.demanda_total_MW);
+  const gen=hist.map(d=>d.kpis.generacion_total_MW);
+
+  const max=Math.max(...demanda,...gen);
+  const min=Math.min(...demanda,...gen);
+  const rango=max-min||1;
+
+  function drawLine(data,color){
     ctx.beginPath();
     ctx.strokeStyle=color;
 
-    arr.forEach((v,i)=>{
-      let px=x(i), py=y(v);
-      i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+    data.forEach((v,i)=>{
+      let x=i/(data.length-1)*c.width;
+      let y=c.height-((v-min)/rango)*c.height;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
     });
 
     ctx.stroke();
   }
 
-  draw(dem,"#FFD100");     // demanda
-  draw(gen,"#00c853");     // generación
+  drawLine(demanda,"#FFD100"); // demanda
+  drawLine(gen,"#00c853"); // generación
+}
 
-  // DÉFICIT
-  for(let i=0;i<dem.length;i++){
+// ===== SCADA =====
+function renderSCADA(data){
 
-    if(dem[i]>gen[i]){
+  const c=document.getElementById("scada");
+  const ctx=c.getContext("2d");
 
-      ctx.fillStyle="rgba(255,0,0,0.25)";
+  c.width=c.offsetWidth;
+  c.height=300;
 
-      ctx.fillRect(
-        x(i)-6,
-        y(dem[i]),
-        12,
-        y(gen[i]) - y(dem[i])
-      );
+  const trs=data.sistema_electrico.transformadores.slice(0,6);
+  const lns=data.sistema_electrico.lineas.slice(0,6);
+
+  let offset=0;
+
+  function draw(){
+
+    ctx.clearRect(0,0,c.width,c.height);
+
+    let cx=c.width/2,cy=c.height/2;
+
+    ctx.fillStyle="#00c853";
+    ctx.beginPath();
+    ctx.arc(cx,cy,10,0,6.28);
+    ctx.fill();
+
+    function flow(x1,y1,x2,y2,color){
+      for(let i=0;i<4;i++){
+        let t=(i+offset)%4/4;
+        ctx.fillStyle=color;
+        ctx.beginPath();
+        ctx.arc(x1+(x2-x1)*t,y1+(y2-y1)*t,3,0,6.28);
+        ctx.fill();
+      }
     }
+
+    trs.forEach((t,i)=>{
+      let a=i/trs.length*Math.PI;
+      let x=cx+Math.cos(a)*120;
+      let y=cy-Math.sin(a)*90;
+
+      let color="lime";
+      if(t.MW>40) color="yellow";
+      if(t.MW>70) color="red";
+
+      ctx.strokeStyle=color;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
+
+      flow(cx,cy,x,y,color);
+    });
+
+    lns.forEach((l,i)=>{
+      let a=i/lns.length*Math.PI+Math.PI;
+      let x=cx+Math.cos(a)*150;
+      let y=cy-Math.sin(a)*110;
+
+      ctx.strokeStyle="#4aa3ff";
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
+
+      flow(cx,cy,x,y,"#4aa3ff");
+    });
+
+    offset+=0.05;
+    requestAnimationFrame(draw);
   }
+
+  draw();
 }
 
-// ===== FLUJO =====
-async function cargar(){
+// ===== ALERTAS =====
+function renderAlertas(data){
+  let ul=document.getElementById("alertas");
+  ul.innerHTML="";
 
-  const m = await fetch("manifest.json").then(r=>r.json());
-  const fechas = m.fechas.sort();
+  let k=data.kpis;
 
-  const sel=document.getElementById("fechaSelect");
+  if((k.STN||0)/(k.demanda_total_MW||1)>0.7)
+    ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
 
-  // cargar histórico
-  for(let f of fechas){
-    let raw = await fetch("data/"+f+".json").then(r=>r.json());
-    HIST[f] = adaptar(raw);
+  if(k.generacion_total_MW < k.demanda_total_MW*0.5)
+    ul.innerHTML+="<li>🔴 Baja generación</li>";
 
-    let opt=document.createElement("option");
-    opt.value=f;
-    opt.textContent=f;
-    sel.appendChild(opt);
-  }
-
-  sel.value = fechas.at(-1);
-
-  function render(){
-
-    const h = HIST[sel.value];
-
-    renderKpis(h);
-    renderGrafico();
-
-    renderCargas(h, document.getElementById("selGer").value);
-  }
-
-  sel.onchange=render;
-
-  document.getElementById("selGer").onchange=render;
-
-  render();
+  if(ul.innerHTML==="")
+    ul.innerHTML="<li>🟢 Sistema estable</li>";
 }
 
-cargar();
+// ===== ESTADO =====
+function renderEstado(){
+  document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
+}
+
+// ===== CARGA =====
+async function cargarDatos(){
+
+  const manifest=await fetch("manifest.json").then(r=>r.json());
+
+  const fechas=manifest.fechas.sort();
+
+  const hoy_fecha=fechas.at(-1);
+
+  const hoy=await fetch("data/"+hoy_fecha+".json").then(r=>r.json());
+
+  const hist_raw=await Promise.all(
+    fechas.slice(-7).map(async f=>{
+      try{
+        let r=await fetch("data/"+f+".json");
+        if(!r.ok) return null;
+        return await r.json();
+      }catch{return null;}
+    })
+  );
+
+  const hist=hist_raw.filter(x=>x&&x.kpis);
+
+  const ayer=hist.length>1?hist.at(-2):null;
+
+  renderKpis(hoy);
+  renderGeneracion(hoy);
+  renderComparativo(hoy,ayer);
+  renderGrafico(hist);
+  renderSCADA(hoy);
+  renderAlertas(hoy);
+  renderEstado();
+}
+
+cargarDatos();
 
 </script>
 
