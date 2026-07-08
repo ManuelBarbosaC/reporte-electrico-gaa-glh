@@ -96,11 +96,22 @@ function adapt(d){
 // ===== KPIS =====
 function renderKpis(d){
 
- document.getElementById("kpis").innerHTML=`
- <div class="k">Demanda<br>${d.kpis.dem}</div>
- <div class="k">STN<br>${d.kpis.stn}</div>
- <div class="k">Gen<br>${d.kpis.gen}</div>`
-}
+document.getElementById("kpis").innerHTML=`
+<div class="k" style="border-left-color:#FFD100">
+  <div class="titulo">Demanda</div>
+  <div class="valor">${fmt(dem)} MW</div>
+</div>
+
+<div class="k" style="border-left-color:#4aa3ff">
+  <div class="titulo">STN</div>
+  <div class="valor">${fmt(stn)} MW</div>
+</div>
+
+<div class="k" style="border-left-color:#00c853">
+  <div class="titulo">Generación</div>
+  <div class="valor">${fmt(gen)} MW</div>
+</div>
+`;
 
 // ===== GENERACION =====
 function renderGen(d){
