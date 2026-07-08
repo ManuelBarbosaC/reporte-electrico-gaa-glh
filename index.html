@@ -9,9 +9,8 @@ body{margin:0;font-family:system-ui;background:#0f1720;color:white}
 .card{background:#111e2b;margin:10px;padding:12px;border-radius:10px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .k{background:#0b141f;padding:10px;border-radius:8px;text-align:center}
-.ok{color:#00c853} .warn{color:#ffd600} .bad{color:#ff1744}
+.ok{color:#00c853}.warn{color:#ffd600}.bad{color:#ff1744}
 canvas{width:100%;height:300px;background:#0a0f1a;border-radius:10px}
-h3{margin-top:0}
 select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border:none}
 </style>
 </head>
@@ -22,9 +21,9 @@ select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border
 
 <!-- FECHA -->
 <div class="card">
-<h3>📅 Selección de fecha</h3>
+<h3>📅 Fecha</h3>
 <input type="date" id="inputFecha">
-<div id="fechaActual" style="margin-top:8px;"></div>
+<div id="fechaActual"></div>
 </div>
 
 <!-- KPIs -->
@@ -38,10 +37,10 @@ select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border
 <h3>⚡ Cargas por Gerencia</h3>
 
 <select id="selectGerencia">
-  <option value="GDT">GDT</option>
-  <option value="GCH">GCH</option>
-  <option value="GDA">GDA</option>
-  <option value="GLC">GLC</option>
+<option value="GDT">GDT</option>
+<option value="GCH">GCH</option>
+<option value="GDA">GDA</option>
+<option value="GLC">GLC</option>
 </select>
 
 <div id="cargas_detalle" class="grid"></div>
@@ -49,7 +48,7 @@ select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border
 
 <!-- GENERACIÓN -->
 <div class="card">
-<h3>⚡ Generación por Unidad</h3>
+<h3>⚡ Generación</h3>
 <div id="gen_unidades" class="grid"></div>
 </div>
 
@@ -86,161 +85,185 @@ select,input{background:#0b141f;color:white;padding:6px;border-radius:6px;border
 
 // ===== FECHA =====
 function renderFecha(data){
-  document.getElementById("fechaActual").innerText = data.fecha;
+  document.getElementById("fechaActual").innerText=data.fecha;
 }
 
 // ===== KPIs =====
 function renderKpis(data){
   const d=data.kpis;
   document.getElementById("kpis").innerHTML=`
-    <div class="k">Demanda<br>${d.demanda_total_MW.toFixed(1)} MW</div>
-    <div class="k">STN<br>${d.STN.toFixed(1)} MW</div>
-    <div class="k">Generación<br>${d.generacion_total_MW.toFixed(1)} MW</div>
+    <div class="k">Demanda<br>${d.demanda_total_MW.toFixed(1)}</div>
+    <div class="k">STN<br>${d.STN.toFixed(1)}</div>
+    <div class="k">Generación<br>${d.generacion_total_MW.toFixed(1)}</div>
   `;
 }
 
 // ===== GENERACION =====
 function renderGeneracion(data){
   const gen=data.kpis_generacion;
-  const html=Object.entries(gen).map(([k,v])=>{
-    let mw=Number(v.potencia_MW||0);
-    let c="ok";
-    if(mw===0) c="bad";
-    if(mw>50) c="warn";
-    return `<div class="k ${c}">${k}<br>${mw.toFixed(1)} MW</div>`;
-  }).join("");
-  document.getElementById("gen_unidades").innerHTML=html;
-}
-
-// ===== COMPARATIVO =====
-function renderComparativo(actual, anterior){
-
-  const cont = document.getElementById("comparativo");
-  const titulo = document.getElementById("tituloComparativo");
-
-  if(!anterior){
-    cont.innerHTML = "<div class='k'>Sin histórico</div>";
-    return;
-  }
-
-  titulo.innerText = `${actual.fecha} vs ${anterior.fecha}`;
-
-  function fila(n,h,a){
-    let diff=h-a;
-    let pct=a!==0?(diff/a)*100:0;
-    let col=diff>0?"ok":diff<0?"bad":"";
-    return `<div class="k ${col}">${n}<br>${h.toFixed(1)}<br><small>${pct.toFixed(1)}%</small></div>`;
-  }
-
-  cont.innerHTML=`
-    ${fila("Demanda",actual.kpis.demanda_total_MW,anterior.kpis.demanda_total_MW)}
-    ${fila("STN",actual.kpis.STN,anterior.kpis.STN)}
-    ${fila("Gen",actual.kpis.generacion_total_MW,anterior.kpis.generacion_total_MW)}
-  `;
+  document.getElementById("gen_unidades").innerHTML=
+    Object.entries(gen).map(([k,v])=>{
+      let mw=Number(v.potencia_MW||0);
+      return `<div class="k">${k}<br>${mw.toFixed(1)}</div>`;
+    }).join("");
 }
 
 // ===== CARGAS =====
-function renderCargas(data, gerencia){
+function renderCargas(data,gerencia){
+  let d={};
+  if(gerencia==="GDT") d=data.cargas.GDT_detalle||{};
+  else if(gerencia==="GCH") d=data.cargas.GCH_detalle||{};
+  else d=data.cargas.Orinoquia||{};
 
-  let detalle={};
+  let max=Math.max(...Object.values(d).map(v=>v||0));
 
-  if(gerencia==="GDT") detalle=data.cargas.GDT_detalle||{};
-  else if(gerencia==="GCH") detalle=data.cargas.GCH_detalle||{};
-  else detalle=data.cargas.Orinoquia||{};
-
-  const valores=Object.entries(detalle);
-  const max=Math.max(...valores.map(([k,v])=>v||0));
-
-  document.getElementById("cargas_detalle").innerHTML= valores.map(([k,v])=>{
-    let pct=max?(v/max)*100:0;
-    return `
-      <div class="k">
-        ${k}<br>${Number(v).toFixed(1)} MW
-        <div style="background:#222;height:6px;margin-top:5px;">
+  document.getElementById("cargas_detalle").innerHTML=
+    Object.entries(d).map(([k,v])=>{
+      let pct=max?(v/max)*100:0;
+      return `<div class="k">${k}<br>${v.toFixed(1)} MW
+        <div style="background:#222;height:6px;margin-top:4px">
           <div style="width:${pct}%;height:100%;background:#00c853"></div>
         </div>
       </div>`;
-  }).join("");
+    }).join("");
 }
 
 function activarSelectorGerencia(data){
-  const select=document.getElementById("selectGerencia");
-  select.onchange=()=>renderCargas(data,select.value);
-  renderCargas(data,select.value);
+  const s=document.getElementById("selectGerencia");
+  s.onchange=()=>renderCargas(data,s.value);
+  renderCargas(data,s.value);
+}
+
+// ===== COMPARATIVO =====
+function renderComparativo(a,b){
+  if(!b)return;
+
+  document.getElementById("tituloComparativo").innerText=
+    `${a.fecha} vs ${b.fecha}`;
+
+  function box(n,x,y){
+    let diff=x-y;
+    let c=diff>0?"ok":diff<0?"bad":"";
+    return `<div class="k ${c}">${n}<br>${x.toFixed(1)}</div>`;
+  }
+
+  document.getElementById("comparativo").innerHTML=`
+    ${box("Demanda",a.kpis.demanda_total_MW,b.kpis.demanda_total_MW)}
+    ${box("STN",a.kpis.STN,b.kpis.STN)}
+    ${box("Gen",a.kpis.generacion_total_MW,b.kpis.generacion_total_MW)}
+  `;
+}
+
+// ===== HISTÓRICO =====
+function renderGrafico(hist){
+  let c=document.getElementById("grafico");
+  let ctx=c.getContext("2d");
+  c.width=c.offsetWidth;
+
+  let d=hist.map(x=>x.kpis.demanda_total_MW);
+  let g=hist.map(x=>x.kpis.generacion_total_MW);
+
+  let max=Math.max(...d,...g);
+  let min=Math.min(...d,...g);
+  let r=max-min||1;
+
+  function draw(arr,color){
+    ctx.beginPath();ctx.strokeStyle=color;
+    arr.forEach((v,i)=>{
+      let x=i/(arr.length-1)*c.width;
+      let y=300-((v-min)/r)*300;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.stroke();
+  }
+
+  ctx.clearRect(0,0,c.width,300);
+  draw(d,"#FFD100");
+  draw(g,"#00c853");
+}
+
+// ===== SCADA =====
+function renderSCADA(data){
+  const c=document.getElementById("scada");
+  const ctx=c.getContext("2d");
+
+  c.width=c.offsetWidth;
+
+  ctx.clearRect(0,0,c.width,300);
+
+  let trs=data.sistema_electrico.transformadores.slice(0,6);
+
+  let cx=c.width/2,cy=150;
+
+  ctx.fillStyle="lime";
+  ctx.beginPath();ctx.arc(cx,cy,10,0,6.28);ctx.fill();
+
+  trs.forEach((t,i)=>{
+    let a=i/trs.length*Math.PI;
+    let x=cx+Math.cos(a)*120;
+    let y=cy-Math.sin(a)*90;
+
+    ctx.strokeStyle="lime";
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
+  });
 }
 
 // ===== ALERTAS =====
 function renderAlertas(data){
-  let ul=document.getElementById("alertas");
-  ul.innerHTML="";
-  let k=data.kpis;
-
-  if(k.generacion_total_MW < k.demanda_total_MW*0.5)
-    ul.innerHTML+="<li>🔴 Baja generación</li>";
-
-  if((k.STN)/(k.demanda_total_MW||1)>0.6)
-    ul.innerHTML+="<li>🔴 Alta dependencia STN</li>";
-
-  if(ul.innerHTML==="")
-    ul.innerHTML="<li>🟢 Sistema estable</li>";
+  let k=data.kpis,u="";
+  if(k.generacion_total_MW<k.demanda_total_MW*0.5)u+="<li>🔴 Baja generación</li>";
+  if((k.STN)/(k.demanda_total_MW||1)>0.6)u+="<li>🔴 STN alto</li>";
+  if(!u)u="<li>🟢 Estable</li>";
+  document.getElementById("alertas").innerHTML=u;
 }
 
-// ===== ESTADO =====
 function renderEstado(){
-  document.getElementById("estadoSistema").innerText="🟢 OPERACIÓN NORMAL";
+  document.getElementById("estadoSistema").innerText="🟢 OK";
 }
 
-// ===== CARGA =====
-async function cargarPorFecha(fecha,fechas){
+// ===== CARGA DATA =====
+async function cargarPorFecha(f,fechas){
 
-  const data=await fetch("data/"+fecha+".json").then(r=>r.json());
+  let data=await fetch("data/"+f+".json").then(r=>r.json());
 
-  const index=fechas.indexOf(fecha);
-  let anterior=null;
+  let idx=fechas.indexOf(f);
+  let ant=null;
 
-// ✅ histórico
-const hist_raw = await Promise.all(
-  fechas
-    .slice(Math.max(0,index-6),index+1)
-    .map(f => fetch("data/"+f+".json")
-      .then(r=>r.ok?r.json():null)
-    )
-);
-
-const hist = hist_raw.filter(x=>x);
-
-  if(index>0){
-    anterior=await fetch("data/"+fechas[index-1]+".json").then(r=>r.json());
+  if(idx>0){
+    ant=await fetch("data/"+fechas[idx-1]+".json").then(r=>r.json());
   }
 
+  let hist=await Promise.all(
+    fechas.slice(Math.max(0,idx-6),idx+1)
+    .map(x=>fetch("data/"+x+".json").then(r=>r.json()))
+  );
 
-renderFecha(data);
-renderKpis(data);
-renderGeneracion(data);
-renderComparativo(data,anterior);
-renderGrafico(hist);      // ✅ RESTAURADO
-renderSCADA(data);        // ✅ RESTAURADO
-renderAlertas(data);
-renderEstado();
-activarSelectorGerencia(data);
-
+  renderFecha(data);
+  renderKpis(data);
+  renderGeneracion(data);
+  renderComparativo(data,ant);
+  renderGrafico(hist);
+  renderSCADA(data);
+  renderAlertas(data);
+  renderEstado();
+  activarSelectorGerencia(data);
 }
 
-// ===== INICIO =====
-async function cargarDatos(){
+// ===== INIT =====
+async function iniciar(){
 
-  const manifest=await fetch("manifest.json").then(r=>r.json());
-  const fechas=manifest.fechas.sort();
+  let m=await fetch("manifest.json").then(r=>r.json());
+  let f=m.fechas.sort();
 
-  const input=document.getElementById("inputFecha");
-  input.value=fechas.at(-1);
+  let input=document.getElementById("inputFecha");
 
-  input.onchange=()=>cargarPorFecha(input.value,fechas);
+  input.value=f.at(-1);
+  input.onchange=()=>cargarPorFecha(input.value,f);
 
-  cargarPorFecha(fechas.at(-1),fechas);
+  cargarPorFecha(f.at(-1),f);
 }
 
-cargarDatos();
+iniciar();
 
 </script>
 
