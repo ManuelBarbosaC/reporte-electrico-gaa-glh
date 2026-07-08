@@ -202,14 +202,17 @@ async function cargarPorFecha(fecha,fechas){
     anterior=await fetch("data/"+fechas[index-1]+".json").then(r=>r.json());
   }
 
-  renderFecha(data);
-  renderKpis(data);
-  renderGeneracion(data);
-  renderComparativo(data,anterior);
-  renderAlertas(data);
-  renderEstado();
 
-  activarSelectorGerencia(data);
+renderFecha(data);
+renderKpis(data);
+renderGeneracion(data);
+renderComparativo(data,anterior);
+renderGrafico(hist);      // ✅ RESTAURADO
+renderSCADA(data);        // ✅ RESTAURADO
+renderAlertas(data);
+renderEstado();
+activarSelectorGerencia(data);
+
 }
 
 // ===== INICIO =====
